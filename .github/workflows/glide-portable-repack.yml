@@ -17,6 +17,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Probe release signing credentials
+        shell: pwsh
+        env:
+          EVS_ACCOUNT_NAME: ${{ secrets.EVS_ACCOUNT_NAME }}
+          EVS_PASSWD: ${{ secrets.EVS_PASSWD }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          Write-Host ("EVS credentials available: " + (-not [string]::IsNullOrWhiteSpace($env:EVS_ACCOUNT_NAME) -and -not [string]::IsNullOrWhiteSpace($env:EVS_PASSWD)))
+          Write-Host ("Windows signing credentials available: " + (-not [string]::IsNullOrWhiteSpace($env:WIN_CSC_LINK) -and -not [string]::IsNullOrWhiteSpace($env:WIN_CSC_KEY_PASSWORD)))
+
       - name: Download current public portable
         shell: pwsh
         run: |
