@@ -1,0 +1,39 @@
+name: Inspect Quantic Glide Portable Package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/glide-portable-repack.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-portable:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download current public portable
+        shell: pwsh
+        run: |
+          $url = "https://github.com/XDSawyerLoL/QuanticSillage/releases/download/quantic-glide-v1.2.6/Quantic-Glide-Portable-1.2.6-x64.exe"
+          Invoke-WebRequest -Uri $url -OutFile old-portable.exe
+          Get-Item old-portable.exe | Format-List Name,Length
+
+      - name: Extract NSIS portable container
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force extracted | Out-Null
+          7z x old-portable.exe -oextracted -y
+          Write-Host "=== TOP LEVEL ==="
+          Get-ChildItem extracted | Select-Object Name,Length,Mode | Format-Table -AutoSize
+          Write-Host "=== APP/ASAR CANDIDATES ==="
+          Get-ChildItem extracted -Recurse -File |
+            Where-Object { $_.Name -match 'app.*asar|app-.*\.7z|Quantic.*\.exe|resources' } |
+            Select-Object FullName,Length | Format-Table -AutoSize
+          Write-Host "=== FIRST 200 FILES ==="
+          Get-ChildItem extracted -Recurse -File | Select-Object -First 200 FullName,Length | Format-Table -AutoSize
