@@ -37,3 +37,19 @@ jobs:
             Select-Object FullName,Length | Format-Table -AutoSize
           Write-Host "=== FIRST 200 FILES ==="
           Get-ChildItem extracted -Recurse -File | Select-Object -First 200 FullName,Length | Format-Table -AutoSize
+
+      - name: Extract packaged application
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force unpacked | Out-Null
+          7z x 'extracted/$PLUGINSDIR/app-64.7z' -ounpacked -y
+          Write-Host "=== UNPACKED TOP LEVEL ==="
+          Get-ChildItem unpacked | Select-Object Name,Length,Mode | Format-Table -AutoSize
+          Write-Host "=== RESOURCE CANDIDATES ==="
+          Get-ChildItem unpacked -Recurse -File |
+            Where-Object { $_.Name -match 'app\.asar|Quantic.*\.exe|electron\.exe' } |
+            Select-Object FullName,Length | Format-Table -AutoSize
+          if (!(Test-Path 'unpacked/resources/app.asar')) {
+            throw 'resources/app.asar not found in extracted portable application'
+          }
+          Get-Item 'unpacked/resources/app.asar' | Format-List FullName,Length
