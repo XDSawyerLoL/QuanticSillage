@@ -3,11 +3,11 @@ use eframe::egui::{self, Color32, CornerRadius, RichText, Stroke, Vec2};
 use crate::model::SourceKind;
 
 pub(crate) fn configure_style(ctx: &egui::Context) {
-    ctx.set_visuals(egui::Visuals::dark());
-    let mut style = (*ctx.style()).clone();
-    style.spacing.item_spacing = Vec2::new(9.0, 9.0);
-    style.spacing.button_padding = Vec2::new(12.0, 7.0);
-    ctx.set_style(style);
+    ctx.set_theme(egui::Theme::Dark);
+    ctx.global_style_mut(|style| {
+        style.spacing.item_spacing = Vec2::new(9.0, 9.0);
+        style.spacing.button_padding = Vec2::new(12.0, 7.0);
+    });
 }
 
 pub(crate) fn panel_frame() -> egui::Frame {
