@@ -9,7 +9,7 @@ use eframe::egui::{self, TextureHandle};
 
 use crate::{
     ffmpeg,
-    model::{ProjectState, Source, SourceKind},
+    model::{Encoder, ProjectState, Source, SourceKind},
 };
 
 const CONFIG_FILE: &str = "quantic-live.json";
@@ -24,6 +24,8 @@ pub struct QuanticLiveApp {
     pub(crate) status: String,
     pub(crate) settings_open: bool,
     pub(crate) add_source_open: bool,
+    pub(crate) ffmpeg_ok: bool,
+    pub(crate) detected_encoder: Encoder,
     last_texture_update: Instant,
 }
 
@@ -31,6 +33,12 @@ impl QuanticLiveApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         crate::ui_helpers::configure_style(&cc.egui_ctx);
         let project = load_project().unwrap_or_default();
+        let ffmpeg_ok = ffmpeg::ffmpeg_available(&project.settings.ffmpeg_path);
+        let detected_encoder = if ffmpeg_ok {
+            ffmpeg::detect_encoder(&project.settings.ffmpeg_path)
+        } else {
+            Encoder::X264
+        };
         Self {
             project,
             preview: None,
@@ -41,11 +49,14 @@ impl QuanticLiveApp {
             status: "Prêt".into(),
             settings_open: false,
             add_source_open: false,
+            ffmpeg_ok,
+            detected_encoder,
             last_texture_update: Instant::now(),
         }
     }
 
     pub(crate) fn save(&mut self) {
+        self.refresh_runtime_status();
         match serde_json::to_string_pretty(&self.project)
             .ok()
             .and_then(|json| fs::write(CONFIG_FILE, json).ok())
@@ -53,6 +64,15 @@ impl QuanticLiveApp {
             Some(_) => self.status = "Configuration sauvegardée".into(),
             None => self.status = "Impossible de sauvegarder la configuration".into(),
         }
+    }
+
+    pub(crate) fn refresh_runtime_status(&mut self) {
+        self.ffmpeg_ok = ffmpeg::ffmpeg_available(&self.project.settings.ffmpeg_path);
+        self.detected_encoder = if self.ffmpeg_ok {
+            ffmpeg::detect_encoder(&self.project.settings.ffmpeg_path)
+        } else {
+            Encoder::X264
+        };
     }
 
     pub(crate) fn toggle_preview(&mut self) {
