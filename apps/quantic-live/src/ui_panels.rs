@@ -8,11 +8,11 @@ use crate::{
 };
 
 impl QuanticLiveApp {
-    pub(crate) fn top_bar(&mut self, ctx: &egui::Context) {
-        egui::TopBottomPanel::top("top_bar")
-            .exact_height(68.0)
+    pub(crate) fn top_bar(&mut self, root: &mut egui::Ui) {
+        egui::Panel::top("top_bar")
+            .exact_size(68.0)
             .frame(panel_frame())
-            .show(ctx, |ui| {
+            .show(root, |ui| {
                 ui.horizontal_centered(|ui| {
                     ui.add_space(10.0);
                     ui.label(RichText::new("◈").size(28.0).color(Color32::from_rgb(183, 148, 255)));
@@ -36,13 +36,13 @@ impl QuanticLiveApp {
             });
     }
 
-    pub(crate) fn left_panel(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("left_panel")
+    pub(crate) fn left_panel(&mut self, root: &mut egui::Ui) {
+        egui::Panel::left("left_panel")
             .resizable(true)
-            .default_width(260.0)
-            .min_width(220.0)
+            .default_size(260.0)
+            .min_size(220.0)
             .frame(panel_frame())
-            .show(ctx, |ui| {
+            .show(root, |ui| {
                 section_title(ui, "SCÈNES");
                 ui.add_space(6.0);
                 for index in 0..self.project.scenes.len() {
@@ -100,13 +100,13 @@ impl QuanticLiveApp {
             });
     }
 
-    pub(crate) fn right_panel(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::right("right_panel")
+    pub(crate) fn right_panel(&mut self, root: &mut egui::Ui) {
+        egui::Panel::right("right_panel")
             .resizable(true)
-            .default_width(300.0)
-            .min_width(260.0)
+            .default_size(300.0)
+            .min_size(260.0)
             .frame(panel_frame())
-            .show(ctx, |ui| {
+            .show(root, |ui| {
                 section_title(ui, "MIXEUR AUDIO");
                 ui.add_space(10.0);
                 audio_strip(ui, "Micro", &mut self.project.mic_volume, &mut self.project.mic_muted);
@@ -143,10 +143,10 @@ impl QuanticLiveApp {
             });
     }
 
-    pub(crate) fn central(&mut self, ctx: &egui::Context) {
+    pub(crate) fn central(&mut self, root: &mut egui::Ui) {
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(Color32::from_rgb(10, 12, 17)))
-            .show(ctx, |ui| {
+            .show(root, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(16.0);
                     ui.label(RichText::new("APERÇU PROGRAMME").weak().size(11.0));
