@@ -2,7 +2,6 @@ use eframe::egui::{self, Color32, CornerRadius, RichText, Stroke, Vec2};
 
 use crate::{
     app::QuanticLiveApp,
-    ffmpeg,
     model::Encoder,
     ui_helpers::{audio_strip, badge, fit_size, info_row, panel_frame, section_title, source_icon},
 };
@@ -118,9 +117,10 @@ impl QuanticLiveApp {
                 ui.add_space(10.0);
                 info_row(ui, "Résolution", &format!("{}×{}", self.project.settings.width, self.project.settings.height));
                 info_row(ui, "FPS", &self.project.settings.fps.to_string());
-                let enc = if self.project.settings.encoder == Encoder::Auto {
-                    let detected = ffmpeg::detect_encoder(&self.project.settings.ffmpeg_path);
-                    format!("Auto · {}", detected.label())
+                let enc = if !self.ffmpeg_ok {
+                    "FFmpeg indisponible".to_owned()
+                } else if self.project.settings.encoder == Encoder::Auto {
+                    format!("Auto · {}", self.detected_encoder.label())
                 } else {
                     self.project.settings.encoder.label().to_owned()
                 };
@@ -132,13 +132,12 @@ impl QuanticLiveApp {
                 ui.add_space(8.0);
                 ui.label(&self.status);
                 ui.add_space(12.0);
-                let ffmpeg_ok = ffmpeg::ffmpeg_available(&self.project.settings.ffmpeg_path);
                 ui.horizontal(|ui| {
                     ui.colored_label(
-                        if ffmpeg_ok { Color32::from_rgb(87, 221, 153) } else { Color32::from_rgb(255, 114, 114) },
+                        if self.ffmpeg_ok { Color32::from_rgb(87, 221, 153) } else { Color32::from_rgb(255, 114, 114) },
                         "●",
                     );
-                    ui.label(if ffmpeg_ok { "FFmpeg détecté" } else { "FFmpeg introuvable" });
+                    ui.label(if self.ffmpeg_ok { "FFmpeg détecté" } else { "FFmpeg introuvable" });
                 });
             });
     }
