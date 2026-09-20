@@ -188,17 +188,18 @@ impl Drop for QuanticLiveApp {
 }
 
 impl eframe::App for QuanticLiveApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
         self.poll_children();
-        self.update_preview(ctx);
+        self.update_preview(&ctx);
         ctx.request_repaint_after(Duration::from_millis(33));
 
-        self.top_bar(ctx);
-        self.left_panel(ctx);
-        self.right_panel(ctx);
-        self.central(ctx);
-        self.settings_window(ctx);
-        self.add_source_window(ctx);
+        self.top_bar(ui);
+        self.left_panel(ui);
+        self.right_panel(ui);
+        self.central(ui);
+        self.settings_window(&ctx);
+        self.add_source_window(&ctx);
     }
 }
 
