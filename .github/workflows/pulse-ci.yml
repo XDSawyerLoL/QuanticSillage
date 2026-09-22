@@ -32,6 +32,9 @@ jobs:
       - name: Validate Pulse DOM contract
         run: npm run test:pulse-ui
 
+      - name: Validate standalone ZOON contract
+        run: npm run test:zoon-ui
+
       - name: Build site
         run: npm run build
 
