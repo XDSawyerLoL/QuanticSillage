@@ -22,7 +22,7 @@ import android.widget.Toast;
 
 public final class MainActivity extends Activity {
     private static final String ZOON_URL =
-            "https://mediumorchid-badger-314305.hostingersite.com/zoon.html";
+            "https://xdsawyerlol.github.io/QuanticSillage/zoon.html?android=1.1.2";
     private static final int FILE_CHOOSER_REQUEST = 4001;
 
     private WebView webView;
@@ -63,6 +63,7 @@ public final class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setDatabaseEnabled(false);
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(true);
@@ -71,7 +72,7 @@ public final class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " ZOONAndroid/1.1");
+        settings.setUserAgentString(settings.getUserAgentString() + " ZOONAndroid/1.1.2");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -164,7 +165,7 @@ public final class MainActivity extends Activity {
         }
 
         String host = uri.getHost();
-        if (host != null && host.equalsIgnoreCase("mediumorchid-badger-314305.hostingersite.com")) {
+        if (host != null && host.equalsIgnoreCase("xdsawyerlol.github.io")) {
             return false;
         }
 
@@ -186,10 +187,10 @@ public final class MainActivity extends Activity {
                 "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>" +
                 "<style>body{margin:0;background:#061827;color:#fff;font-family:system-ui;display:grid;" +
                 "place-items:center;min-height:100vh;text-align:center}.c{max-width:360px;padding:32px}" +
-                ".logo{font-size:64px}.name{font-size:32px;font-weight:800;letter-spacing:.08em;color:#ffd447}" +
+                ".name{font-size:32px;font-weight:800;letter-spacing:.08em;color:#ffd447}" +
                 "p{color:#b8c7d4;line-height:1.55}a{display:inline-block;margin-top:16px;padding:13px 20px;" +
                 "border-radius:999px;background:#ffd447;color:#061827;text-decoration:none;font-weight:800}</style></head>" +
-                "<body><div class='c'><div class='logo'>●ᴥ●</div><div class='name'>ZOON</div>" +
+                "<body><div class='c'><div class='name'>ZOON</div>" +
                 "<p>Impossible de joindre ZOON. Vérifie ta connexion puis réessaie.</p>" +
                 "<a href='zoon://open'>Réessayer</a></div></body></html>";
 
