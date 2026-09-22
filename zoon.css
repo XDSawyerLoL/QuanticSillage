@@ -1,0 +1,67 @@
+/* ZOON standalone shell: no Quantic Sillage product chrome. */
+.zoon-body {
+  --zoon-yellow:#ffd447;
+  --zoon-navy:#061827;
+  background:var(--zoon-navy);
+}
+
+.zoon-brand {
+  cursor:default;
+  text-decoration:none;
+}
+
+.zoon-brand img {
+  width:46px;
+  height:46px;
+  object-fit:contain;
+  filter:none;
+}
+
+.zoon-brand > div {
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+
+.zoon-brand strong {
+  color:var(--zoon-yellow);
+  letter-spacing:.08em;
+  font-size:1.08rem;
+}
+
+.zoon-brand span {
+  color:rgba(255,255,255,.52);
+  font-size:.72rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.zoon-body .pulse-primary,
+.zoon-body .pulse-publish,
+.zoon-body .pulse-welcome-primary {
+  background:var(--zoon-yellow);
+  color:var(--zoon-navy);
+}
+
+.zoon-body .pulse-kicker,
+.zoon-body .pulse-nav-item.active {
+  color:var(--zoon-yellow);
+}
+
+.zoon-body .pulse-tab.active {
+  border-color:var(--zoon-yellow);
+}
+
+@media (max-width: 760px) {
+  .zoon-body .pulse-topbar {
+    backdrop-filter:blur(18px);
+  }
+
+  .zoon-body .pulse-top-actions {
+    gap:6px;
+  }
+
+  .zoon-body .pulse-top-button {
+    min-height:40px;
+  }
+}
