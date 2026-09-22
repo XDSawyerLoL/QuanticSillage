@@ -65,3 +65,19 @@
     min-height:40px;
   }
 }
+
+.zoon-brand img{
+  border-radius:14px;
+  background:#000;
+  box-shadow:0 0 20px rgba(255,196,0,.18);
+}
+.zoon-welcome-mark{
+  background:#000!important;
+  overflow:hidden;
+  padding:0;
+}
+.zoon-welcome-mark img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
