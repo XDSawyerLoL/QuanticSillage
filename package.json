@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "node scripts/generate-news-articles.mjs && node scripts/news-feed-snapshot.mjs && node scripts/prepare-public.mjs && vite build && node scripts/finalize-pages.mjs",
     "preview": "vite preview",
-    "test:pulse-ui": "node scripts/pulse-ui-contract.mjs",\n    "test:zoon-ui": "node scripts/zoon-ui-contract.mjs"
+    "test:pulse-ui": "node scripts/pulse-ui-contract.mjs",
+    "test:zoon-ui": "node scripts/zoon-ui-contract.mjs"
   },
   "dependencies": {
     "framer-motion": "13.4.0",
