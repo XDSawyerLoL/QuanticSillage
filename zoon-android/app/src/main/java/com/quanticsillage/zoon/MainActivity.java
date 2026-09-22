@@ -13,7 +13,6 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -22,16 +21,13 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public final class MainActivity extends Activity {
-    private static final String PRIMARY_URL =
+    private static final String ZOON_URL =
             "https://mediumorchid-badger-314305.hostingersite.com/zoon.html";
-    private static final String FALLBACK_URL =
-            "https://mediumorchid-badger-314305.hostingersite.com/pulse.html";
     private static final int FILE_CHOOSER_REQUEST = 4001;
 
     private WebView webView;
     private ProgressBar progressBar;
     private ValueCallback<Uri[]> fileChooserCallback;
-    private boolean fallbackAttempted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +71,7 @@ public final class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " ZOONAndroid/1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " ZOONAndroid/1.1");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -91,15 +87,19 @@ public final class MainActivity extends Activity {
                 if (fileChooserCallback != null) {
                     fileChooserCallback.onReceiveValue(null);
                 }
+
                 fileChooserCallback = callback;
+
                 try {
                     startActivityForResult(params.createIntent(), FILE_CHOOSER_REQUEST);
                     return true;
                 } catch (ActivityNotFoundException error) {
                     fileChooserCallback = null;
-                    Toast.makeText(MainActivity.this,
+                    Toast.makeText(
+                            MainActivity.this,
                             "Aucune application ne peut ouvrir ce fichier.",
-                            Toast.LENGTH_SHORT).show();
+                            Toast.LENGTH_SHORT
+                    ).show();
                     return false;
                 }
             }
@@ -114,7 +114,6 @@ public final class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
-                applyZoonBranding(view);
             }
 
             @Override
@@ -129,33 +128,12 @@ public final class MainActivity extends Activity {
             }
 
             @Override
-            public void onReceivedHttpError(
-                    WebView view,
-                    WebResourceRequest request,
-                    WebResourceResponse response
-            ) {
-                if (request.isForMainFrame()
-                        && PRIMARY_URL.equals(request.getUrl().toString())
-                        && response.getStatusCode() >= 400
-                        && !fallbackAttempted) {
-                    fallbackAttempted = true;
-                    view.loadUrl(FALLBACK_URL);
-                }
-            }
-
-            @Override
             public void onReceivedError(
                     WebView view,
                     WebResourceRequest request,
                     WebResourceError error
             ) {
-                if (!request.isForMainFrame()) {
-                    return;
-                }
-                if (!fallbackAttempted && PRIMARY_URL.equals(request.getUrl().toString())) {
-                    fallbackAttempted = true;
-                    view.loadUrl(FALLBACK_URL);
-                } else {
+                if (request.isForMainFrame()) {
                     showOfflinePage();
                 }
             }
@@ -198,12 +176,12 @@ public final class MainActivity extends Activity {
     }
 
     private void loadZoon() {
-        fallbackAttempted = false;
-        webView.loadUrl(PRIMARY_URL);
+        webView.loadUrl(ZOON_URL);
     }
 
     private void showOfflinePage() {
         progressBar.setVisibility(View.GONE);
+
         String html =
                 "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>" +
                 "<style>body{margin:0;background:#061827;color:#fff;font-family:system-ui;display:grid;" +
@@ -212,36 +190,16 @@ public final class MainActivity extends Activity {
                 "p{color:#b8c7d4;line-height:1.55}a{display:inline-block;margin-top:16px;padding:13px 20px;" +
                 "border-radius:999px;background:#ffd447;color:#061827;text-decoration:none;font-weight:800}</style></head>" +
                 "<body><div class='c'><div class='logo'>●ᴥ●</div><div class='name'>ZOON</div>" +
-                "<p>Impossible de joindre Quantic Sillage. Vérifie ta connexion puis réessaie.</p>" +
+                "<p>Impossible de joindre ZOON. Vérifie ta connexion puis réessaie.</p>" +
                 "<a href='zoon://open'>Réessayer</a></div></body></html>";
-        webView.loadDataWithBaseURL("https://zoon.quanticsillage.local/", html, "text/html", "UTF-8", null);
-    }
 
-    private void applyZoonBranding(WebView view) {
-        String script =
-                "(function(){" +
-                "document.title='ZOON — Quantic Sillage';" +
-                "var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);" +
-                "var n=[];while(w.nextNode())n.push(w.currentNode);" +
-                "n.forEach(function(x){x.nodeValue=x.nodeValue" +
-                ".replace(/Quantic Pulse/g,'ZOON')" +
-                ".replace(/Compte Pulse/g,'Compte ZOON')" +
-                ".replace(/sur Pulse/g,'sur ZOON')" +
-                ".replace(/Bienvenue sur Pulse/g,'Bienvenue sur ZOON')" +
-                ".replace(/\\bPulse\\b/g,'ZOON');});" +
-                "var s=document.createElement('style');" +
-                "s.textContent='" +
-                ".pulse-primary,.pulse-publish,.pulse-welcome-primary{background:#ffd447!important;color:#061827!important}" +
-                ".pulse-brand strong,.pulse-kicker{color:#ffd447!important}" +
-                ".pulse-nav-item.active{color:#ffd447!important}" +
-                ".pulse-tab.active{border-color:#ffd447!important}" +
-                ".pulse-brand img{display:none!important}" +
-                ".pulse-brand:before{content:\"●ᴥ●\";display:grid;place-items:center;width:46px;height:46px;" +
-                "border-radius:15px;background:#ffd447;color:#061827;font-weight:900;font-size:19px;" +
-                "box-shadow:0 10px 30px rgba(0,0,0,.22)}';" +
-                "document.head.appendChild(s);" +
-                "})();";
-        view.evaluateJavascript(script, null);
+        webView.loadDataWithBaseURL(
+                "https://zoon.local/",
+                html,
+                "text/html",
+                "UTF-8",
+                null
+        );
     }
 
     @Override
