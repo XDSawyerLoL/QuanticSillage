@@ -81,3 +81,79 @@
   height:100%;
   object-fit:cover;
 }
+
+/* ZOON dark product surface */
+.zoon-body{
+  --pulse-bg:#061827;
+  --pulse-card:#0a2030;
+  --pulse-ink:#f5f7fa;
+  --pulse-muted:#8fa6b3;
+  --pulse-line:rgba(255,255,255,.09);
+  --pulse-cyan:#ffd447;
+  --pulse-teal:#ff9f1c;
+  --pulse-navy:#061827;
+  color:var(--pulse-ink);
+}
+.zoon-body .pulse-sidebar,
+.zoon-body .pulse-main,
+.zoon-body .pulse-topbar,
+.zoon-body .pulse-tabs,
+.zoon-body .pulse-composer,
+.zoon-body .pulse-post,
+.zoon-body .pulse-panel,
+.zoon-body .pulse-search,
+.zoon-body .pulse-card,
+.zoon-body .pulse-view,
+.zoon-body .pulse-empty,
+.zoon-body .pulse-status{
+  background:#0a2030;
+  color:var(--pulse-ink);
+}
+.zoon-body .pulse-sidebar{background:#071b2a}
+.zoon-body .pulse-main{background:#081c2b}
+.zoon-body .pulse-topbar{background:rgba(6,24,39,.94)}
+.zoon-body .pulse-tabs{background:#081c2b}
+.zoon-body .pulse-post:hover,
+.zoon-body .pulse-card:hover,
+.zoon-body .trend:hover,
+.zoon-body .circle:hover{background:#0d2638}
+.zoon-body .trend,
+.zoon-body .circle{background:#0a2030;color:var(--pulse-ink)}
+.zoon-body .pulse-nav-item{color:#b9c8d1}
+.zoon-body .pulse-nav-item:hover,
+.zoon-body .pulse-nav-item.active{background:rgba(255,212,71,.10);color:#ffd447}
+.zoon-body .pulse-top-button,
+.zoon-body .pulse-link-button,
+.zoon-body .pulse-mini-button,
+.zoon-body .pulse-welcome-secondary{
+  background:#0d2638;
+  color:#ffd447;
+  border-color:rgba(255,212,71,.28);
+}
+.zoon-body .pulse-welcome{
+  background:radial-gradient(circle at 18% 20%,rgba(255,212,71,.08),transparent 32%),linear-gradient(145deg,#071b2a,#0a2030);
+}
+.zoon-body .pulse-welcome-copy h2,
+.zoon-body .pulse-status strong,
+.zoon-body .pulse-empty strong,
+.zoon-body .pulse-view-head h2{color:#fff}
+.zoon-body .pulse-composer textarea,
+.zoon-body .pulse-search input,
+.zoon-body .pulse-inline-form input,
+.zoon-body .pulse-inline-form textarea,
+.zoon-body .pulse-inline-form select,
+.zoon-body .pulse-message-form input,
+.zoon-body .pulse-message-form textarea,
+.zoon-body .pulse-modal-card input{
+  color:#fff;
+  background:#071b2a;
+  border-color:rgba(255,255,255,.10);
+}
+.zoon-body .pulse-modal-card{background:#0a2030;color:#fff}
+.zoon-body .pulse-message{background:#0d2a3d}
+.zoon-body .pulse-message.mine{background:#3a300d;color:#fff7d6}
+.zoon-body .pulse-action:hover,
+.zoon-body .pulse-action.active{background:rgba(255,212,71,.10);color:#ffd447}
+.zoon-body .pulse-tab.active:after{background:#ffd447}
+.zoon-body .pulse-mobile-nav button.active{color:#ffd447}
+.zoon-body .pulse-mobile-nav #mobile-compose{background:#ffd447;color:#061827}
