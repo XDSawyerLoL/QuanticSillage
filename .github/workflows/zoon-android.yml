@@ -92,6 +92,5 @@ jobs:
             adb shell dumpsys activity activities | grep -A6 -B3 com.quanticsillage.zoon || true
             echo "=== Relevant logcat ==="
             adb logcat -d -v time | grep -E -A20 -B8 "FATAL EXCEPTION|AndroidRuntime|com.quanticsillage.zoon|chromium|WebViewFactory" || true
-            PID="$(adb shell pidof com.quanticsillage.zoon.test | tr -d '\r')"
-            test -n "$PID"
+            adb shell ps -A | grep -q "[c]om.quanticsillage.zoon.test"
             adb shell dumpsys activity activities | grep -q "com.quanticsillage.zoon.test/com.quanticsillage.zoon.MainActivity"
