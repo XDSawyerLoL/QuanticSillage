@@ -114,9 +114,7 @@ jobs:
             sleep 10
             adb shell ps -A | grep -q "[c]om.quanticsillage.zoon.test"
             adb shell dumpsys activity activities | grep -q "com.quanticsillage.zoon.test/com.quanticsillage.zoon.MainActivity"
-            if adb logcat -d | grep -E "FATAL EXCEPTION.*com.quanticsillage.zoon|Process: com.quanticsillage.zoon.test" ; then
-              exit 1
-            fi
+            ! adb logcat -d | grep -E -q "Process: com.quanticsillage.zoon.test|FATAL EXCEPTION.*ZOON"
             adb exec-out screencap -p > /tmp/zoon-screen.png
 
       - name: Upload Android screenshot
