@@ -389,3 +389,11 @@ button{touch-action:manipulation}
   .zoon-explore-search{padding:12px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.zoon-toast{
+  position:fixed;left:50%;bottom:92px;z-index:5000;transform:translate(-50%,16px);
+  max-width:min(88vw,420px);padding:11px 15px;border:1px solid var(--z-line);
+  border-radius:999px;background:#102b3d;color:#fff;box-shadow:var(--z-shadow);
+  font-size:.78rem;font-weight:750;opacity:0;pointer-events:none;transition:.18s ease;
+}
+.zoon-toast.show{opacity:1;transform:translate(-50%,0)}
