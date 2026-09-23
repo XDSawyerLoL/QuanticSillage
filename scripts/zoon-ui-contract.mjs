@@ -48,9 +48,4 @@ if(!manifest.includes('android:icon="@mipmap/ic_launcher"')||!manifest.includes(
 if(!gradle.includes("versionName '1.2.0'")||!gradle.includes("syncZoonWebAssets")){
   throw new Error('Android 1.2.0 must bundle the ZOON product assets');
 }
-
-if(!html.includes('id="network-banner"')||!html.includes('id="explore-form"')===true){
-  // explore-form is injected by views.js; only the resilient network control is static.
-}
-
 console.log('ZOON 1.2 standalone product contract OK');
