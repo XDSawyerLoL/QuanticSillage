@@ -1,6 +1,20 @@
-import { TOKEN_KEY, state, dom, api, errorText } from './core.js';
+import { state, dom, api, errorText, setNetworkState } from './core.js';
 import { openAuth, closeAuth, updateAuthModal, updateAccount, requireAuth, applySession, clearSession, restoreSession } from './session.js';
-import { setView, loadHome, loadExplore, loadCircles, loadNotifications, loadSaved, loadProfile, loadMessages, loadConversation, loadCirclePreview } from './views.js';
+import { setView, loadHome, loadExplore, loadCircles, loadNotifications, loadSaved, loadProfile, loadMessages, loadCirclePreview } from './views.js';
+
+function toast(message){
+  let node=document.getElementById('zoon-toast');
+  if(!node){
+    node=document.createElement('div');
+    node.id='zoon-toast';
+    node.className='zoon-toast';
+    document.body.appendChild(node);
+  }
+  node.textContent=message;
+  node.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer=setTimeout(()=>node.classList.remove('show'),2600);
+}
 
 function setReply(postId,handle){
   state.replyTo=postId;
@@ -27,9 +41,10 @@ async function publishPost(){
     dom.textarea.value='';
     dom.count.textContent='0 / 420';
     clearReply();
+    toast('Publié');
     await loadHome();
   }catch(error){
-    alert(errorText(error));
+    toast(errorText(error));
     dom.publish.disabled=false;
   }
 }
@@ -40,7 +55,7 @@ async function toggleAction(postId,action){
     await api('/api/pulse/posts/'+encodeURIComponent(postId)+'/'+action,{method:'POST',body:'{}'});
     if(state.view==='home')await loadHome();
   }catch(error){
-    alert(errorText(error));
+    toast(errorText(error));
   }
 }
 
@@ -50,9 +65,9 @@ async function reportPost(postId){
   if(!reason)return;
   try{
     await api('/api/pulse/report',{method:'POST',body:JSON.stringify({targetType:'post',targetId:postId,reason})});
-    alert('Signalement transmis.');
+    toast('Signalement transmis');
   }catch(error){
-    alert(errorText(error));
+    toast(errorText(error));
   }
 }
 
@@ -73,7 +88,7 @@ async function exportData(){
     anchor.click();
     setTimeout(function(){URL.revokeObjectURL(anchor.href)},1000);
   }catch(error){
-    alert(errorText(error));
+    toast(errorText(error));
   }
 }
 
@@ -89,18 +104,18 @@ async function editProfile(){
     updateAccount();
     await loadProfile(state.user.handle);
   }catch(error){
-    alert(errorText(error));
+    toast(errorText(error));
   }
 }
 
-async function health(){
-  try{
-    await api('/api/pulse/health');
-    document.getElementById('api-state').textContent='En ligne';
-    document.getElementById('api-state').title='Service ZOON disponible';
-  }catch{
-    document.getElementById('api-state').textContent='Hors ligne';
-  }
+async function retryCurrentView(){
+  setNetworkState(true);
+  if(state.view==='home')return loadHome();
+  if(state.view==='circles')return loadCircles();
+  if(state.view==='notifications')return loadNotifications();
+  if(state.view==='saved')return loadSaved();
+  if(state.view==='profile')return loadProfile();
+  return loadHome();
 }
 
 function bindStaticEvents(){
@@ -111,6 +126,8 @@ function bindStaticEvents(){
 
   dom.publish.addEventListener('click',publishPost);
   document.getElementById('cancel-context').addEventListener('click',clearReply);
+  document.getElementById('network-retry').addEventListener('click',retryCurrentView);
+
   document.getElementById('compose-focus').addEventListener('click',function(){
     if(requireAuth()){
       setView('home','Accueil');
@@ -118,20 +135,22 @@ function bindStaticEvents(){
       window.scrollTo({top:0,behavior:'smooth'});
     }
   });
+
   document.getElementById('mobile-compose').addEventListener('click',function(){
     if(requireAuth()){
       setView('home','Accueil');
       dom.textarea.focus();
-      window.scrollTo({top:0,behavior:'smooth'});
+      setTimeout(()=>dom.textarea.scrollIntoView({block:'center',behavior:'smooth'}),30);
     }
   });
+
   document.getElementById('auth-button').addEventListener('click',function(){
     state.user?loadProfile(state.user.handle):openAuth('login');
   });
   document.getElementById('welcome-register').addEventListener('click',function(){openAuth('register')});
   document.getElementById('welcome-login').addEventListener('click',function(){openAuth('login')});
   document.getElementById('account-button').addEventListener('click',function(){
-    state.user?loadProfile(state.user.handle):openAuth('register');
+    state.user?loadProfile(state.user.handle):openAuth('login');
   });
   document.getElementById('auth-close').addEventListener('click',closeAuth);
   document.getElementById('auth-switch').addEventListener('click',function(){
@@ -149,6 +168,8 @@ function bindStaticEvents(){
     const handle=document.getElementById('auth-handle').value.trim().replace(/^@/,'').toLowerCase();
     const password=document.getElementById('auth-password').value;
     const displayName=document.getElementById('auth-display-name').value.trim();
+    const submit=dom.authForm.querySelector('[type="submit"]');
+    submit.disabled=true;
     try{
       const path=state.authMode==='register'?'/api/pulse/auth/register':'/api/pulse/auth/login';
       const body=state.authMode==='register'?{handle,password,displayName}:{handle,password};
@@ -156,10 +177,13 @@ function bindStaticEvents(){
       applySession(data);
       closeAuth();
       dom.authForm.reset();
+      toast(state.authMode==='register'?'Compte créé':'Connecté');
       await loadHome();
-      await loadCirclePreview();
+      loadCirclePreview();
     }catch(error){
       dom.authError.textContent=errorText(error);
+    }finally{
+      submit.disabled=false;
     }
   });
 
@@ -177,7 +201,7 @@ function bindStaticEvents(){
     button.addEventListener('click',function(){
       const view=button.dataset.view;
       if(view==='home')loadHome();
-      else if(view==='explore')loadExplore(document.getElementById('pulse-search').value);
+      else if(view==='explore')loadExplore();
       else if(view==='circles')loadCircles();
       else if(view==='notifications')loadNotifications();
       else if(view==='messages')loadMessages();
@@ -186,23 +210,33 @@ function bindStaticEvents(){
     });
   });
 
+  const search=document.getElementById('pulse-search');
   let searchTimer;
-  document.getElementById('pulse-search').addEventListener('input',function(event){
+  search?.addEventListener('input',function(event){
     clearTimeout(searchTimer);
     const query=event.target.value;
     searchTimer=setTimeout(function(){
       if(query.trim().length>=2)loadExplore(query);
-    },250);
+    },300);
   });
+  document.getElementById('desktop-search-form')?.addEventListener('submit',function(event){
+    event.preventDefault();
+    loadExplore(search.value);
+  });
+
+  window.addEventListener('online',async function(){setNetworkState(true);await restoreSession().catch(()=>{});retryCurrentView()});
+  window.addEventListener('offline',function(){setNetworkState(false,'Tu es hors ligne · lecture du cache disponible')});
 }
 
 function bindDelegatedEvents(){
   document.addEventListener('click',async function(event){
+    if(event.target.closest('[data-retry-home]')){retryCurrentView();return}
+
+    const circleView=event.target.closest('.circle[data-view="circles"]');
+    if(circleView){loadCircles();return}
+
     const profile=event.target.closest('[data-profile]');
-    if(profile){
-      loadProfile(profile.dataset.profile);
-      return;
-    }
+    if(profile){loadProfile(profile.dataset.profile);return}
 
     const post=event.target.closest('.pulse-post');
     const action=event.target.closest('[data-action]');
@@ -221,13 +255,10 @@ function bindDelegatedEvents(){
       if(action.dataset.action==='share'){
         const shareUrl=location.origin+location.pathname+'?post='+encodeURIComponent(postId);
         if(navigator.share)navigator.share({title:'ZOON',url:shareUrl}).catch(function(){});
-        else navigator.clipboard?.writeText(shareUrl);
+        else navigator.clipboard?.writeText(shareUrl).then(()=>toast('Lien copié'));
         return;
       }
-      if(action.dataset.action==='report'){
-        reportPost(postId);
-        return;
-      }
+      if(action.dataset.action==='report'){reportPost(postId);return}
     }
 
     const join=event.target.closest('[data-circle-join]');
@@ -236,8 +267,8 @@ function bindDelegatedEvents(){
       try{
         await api('/api/pulse/circles/'+encodeURIComponent(join.dataset.circleJoin)+'/join',{method:'POST',body:'{}'});
         await loadCircles();
-        await loadCirclePreview();
-      }catch(error){alert(errorText(error))}
+        loadCirclePreview();
+      }catch(error){toast(errorText(error))}
       return;
     }
 
@@ -246,7 +277,7 @@ function bindDelegatedEvents(){
       try{
         await api('/api/pulse/users/'+encodeURIComponent(follow.dataset.follow)+'/follow',{method:'POST',body:'{}'});
         await loadProfile(follow.dataset.follow);
-      }catch(error){alert(errorText(error))}
+      }catch(error){toast(errorText(error))}
       return;
     }
 
@@ -256,19 +287,7 @@ function bindDelegatedEvents(){
       try{
         await api('/api/pulse/users/'+encodeURIComponent(block.dataset.block)+'/block',{method:'POST',body:'{}'});
         await loadHome();
-      }catch(error){alert(errorText(error))}
-      return;
-    }
-
-    const message=event.target.closest('[data-message-user]');
-    if(message){
-      loadConversation(message.dataset.messageUser);
-      return;
-    }
-
-    const conversation=event.target.closest('[data-conversation]');
-    if(conversation){
-      loadConversation(conversation.dataset.conversation);
+      }catch(error){toast(errorText(error))}
       return;
     }
 
@@ -278,6 +297,13 @@ function bindDelegatedEvents(){
   });
 
   document.addEventListener('submit',async function(event){
+    if(event.target.id==='explore-form'){
+      event.preventDefault();
+      const query=new FormData(event.target).get('q')||'';
+      loadExplore(String(query));
+      return;
+    }
+
     if(event.target.id==='circle-create'){
       event.preventDefault();
       if(!requireAuth())return;
@@ -285,27 +311,8 @@ function bindDelegatedEvents(){
       try{
         await api('/api/pulse/circles',{method:'POST',body:JSON.stringify({name:form.get('name'),description:form.get('description')})});
         await loadCircles();
-        await loadCirclePreview();
-      }catch(error){alert(errorText(error))}
-    }
-
-    if(event.target.id==='new-message'){
-      event.preventDefault();
-      const form=new FormData(event.target);
-      try{
-        await api('/api/pulse/messages',{method:'POST',body:JSON.stringify({handle:String(form.get('handle')||'').replace(/^@/,''),body:form.get('body')})});
-        await loadMessages();
-      }catch(error){alert(errorText(error))}
-    }
-
-    if(event.target.id==='conversation-form'){
-      event.preventDefault();
-      const form=new FormData(event.target);
-      const handle=event.target.dataset.handle;
-      try{
-        await api('/api/pulse/messages',{method:'POST',body:JSON.stringify({handle,body:form.get('body')})});
-        await loadConversation(handle);
-      }catch(error){alert(errorText(error))}
+        loadCirclePreview();
+      }catch(error){toast(errorText(error))}
     }
   });
 }
@@ -313,9 +320,16 @@ function bindDelegatedEvents(){
 async function init(){
   bindStaticEvents();
   bindDelegatedEvents();
-  await health();
-  await restoreSession();
-  await Promise.all([loadHome(),loadCirclePreview()]);
+  updateAccount();
+  if(navigator.onLine===false)setNetworkState(false,'Tu es hors ligne · lecture du cache disponible');
+
+  const sessionPromise=restoreSession().catch(()=>{});
+  await sessionPromise;
+  await loadHome();
+  loadCirclePreview();
 }
 
-init();
+init().catch(function(error){
+  console.error('[ZOON] startup',error);
+  setNetworkState(false,'ZOON a rencontré un problème de démarrage');
+});

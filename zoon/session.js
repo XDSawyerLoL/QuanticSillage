@@ -4,7 +4,7 @@ export function openAuth(mode='login'){
   state.authMode=mode;
   dom.authModal.hidden=false;
   updateAuthModal();
-  setTimeout(function(){document.getElementById('auth-handle').focus()},20);
+  setTimeout(function(){document.getElementById('auth-handle').focus()},40);
 }
 
 export function closeAuth(){
@@ -14,8 +14,8 @@ export function closeAuth(){
 
 export function updateAuthModal(){
   const register=state.authMode==='register';
-  document.getElementById('auth-title').textContent=register?'Créer un compte':'Se connecter';
-  document.getElementById('auth-copy').textContent=register?'Choisis ton identité ZOON. Ton nom civil n’est pas obligatoire.':'Retrouve ton fil, tes abonnements, tes messages et tes cercles.';
+  document.getElementById('auth-title').textContent=register?'Créer ton compte':'Se connecter';
+  document.getElementById('auth-copy').textContent=register?'Un identifiant, un mot de passe. Ton nom civil n’est pas requis.':'Retrouve ton profil et ton fil ZOON.';
   document.getElementById('display-name-field').hidden=!register;
   document.getElementById('auth-switch').textContent=register?'J’ai déjà un compte':'Créer un compte';
   document.getElementById('auth-password').autocomplete=register?'new-password':'current-password';
@@ -35,18 +35,18 @@ export function updateAccount(){
     avatar.textContent=initials(user);
     composerAvatar.textContent=initials(user);
     button.textContent='@'+user.handle;
-    dom.textarea.placeholder='Écrivez une publication…';
+    dom.textarea.placeholder='Qu’as-tu à dire ?';
     dom.followingLabel.textContent='Abonnements';
-    dom.followingHelp.textContent='Les comptes que vous suivez';
+    dom.followingHelp.textContent='Ton fil';
   }else{
     name.textContent='Compte ZOON';
-    handle.textContent='Identité locale ZOON';
+    handle.textContent='Se connecter';
     avatar.textContent='?';
     composerAvatar.textContent='?';
-    button.textContent='Compte ZOON';
-    dom.textarea.placeholder='Écrivez une publication…';
+    button.textContent='Connexion';
+    dom.textarea.placeholder='Qu’as-tu à dire ?';
     dom.followingLabel.textContent='Récent';
-    dom.followingHelp.textContent='Les publications les plus récentes';
+    dom.followingHelp.textContent='Le fil public';
   }
 
   if(state.view==='home'){
@@ -80,12 +80,18 @@ export async function restoreSession(){
     updateAccount();
     return;
   }
+
   try{
     const data=await api('/api/pulse/me');
     state.user=data.user;
-  }catch{
-    state.token='';
-    localStorage.removeItem(TOKEN_KEY);
+  }catch(error){
+    if(error?.status===401){
+      state.token='';
+      state.user=null;
+      localStorage.removeItem(TOKEN_KEY);
+    }
+    /* A network outage is not a logout. Keep the local token and let the
+       cache-first UI remain usable until the API comes back. */
   }
   updateAccount();
 }
