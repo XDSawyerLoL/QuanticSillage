@@ -2,6 +2,29 @@ plugins {
     id 'com.android.application'
 }
 
+def repoRoot = rootProject.projectDir.parentFile
+def generatedZoonAssetsDir = file("$buildDir/generated/zoonAssets")
+
+tasks.register('syncZoonWebAssets', Sync) {
+    into generatedZoonAssetsDir
+
+    from(repoRoot) {
+        include 'zoon.html'
+        include 'pulse.css'
+        include 'zoon.css'
+        include 'zoon-config.js'
+    }
+
+    from(new File(repoRoot, 'zoon')) {
+        into 'zoon'
+    }
+
+    from(new File(repoRoot, 'assets')) {
+        include 'zoon-mark.webp'
+        into 'assets'
+    }
+}
+
 android {
     namespace 'com.quanticsillage.zoon'
     compileSdk 36
@@ -10,14 +33,14 @@ android {
         applicationId 'com.quanticsillage.zoon'
         minSdk 26
         targetSdk 36
-        versionCode 5
-        versionName '1.1.3'
+        versionCode 6
+        versionName '1.2.0'
     }
 
     signingConfigs {
         debug {
-            // Public TEST key committed on purpose so GitHub Actions produces
-            // update-compatible debug APKs. Never use this key for Play/release.
+            // Public TEST key committed on purpose so CI debug APKs are update-compatible.
+            // Never use this key for a Play/release build.
             storeFile file('../ci/zoon-test.keystore')
             storePassword 'zoon-test-2026'
             keyAlias 'zoon_test'
@@ -37,8 +60,22 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            assets.srcDir generatedZoonAssetsDir
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('syncZoonWebAssets')
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.14.0'
 }
