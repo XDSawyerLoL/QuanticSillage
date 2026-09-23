@@ -157,3 +157,57 @@
 .zoon-body .pulse-tab.active:after{background:#ffd447}
 .zoon-body .pulse-mobile-nav button.active{color:#ffd447}
 .zoon-body .pulse-mobile-nav #mobile-compose{background:#ffd447;color:#061827}
+
+
+/* ZOON 1.2 — hybrid X / Instagram feed + embedded Quantic News */
+.zoon-body .pulse-tabs{overflow-x:auto;scrollbar-width:none}
+.zoon-body .pulse-tab{min-width:150px}
+.zoon-body .pulse-tab-news strong{display:flex;align-items:center;gap:.4rem}
+.zoon-body .pulse-tab-news strong:before{content:'RSS';font-size:.58rem;letter-spacing:.08em;padding:.16rem .32rem;border:1px solid rgba(255,212,71,.35);border-radius:5px;color:#ffd447}
+.zoon-body .pulse-post{padding:18px 20px}
+.zoon-body .pulse-post-main{min-width:0;width:100%}
+.zoon-body .pulse-post-main>p{font-size:1rem;line-height:1.55}
+.zoon-body .pulse-rich-card{display:block;margin-top:12px;border:1px solid rgba(255,212,71,.12);border-radius:18px;overflow:hidden;background:#071b2a;color:#fff;text-decoration:none}
+.zoon-body .pulse-rich-card>img,.zoon-body .pulse-rich-media>img{display:block;width:100%;max-height:620px;object-fit:cover;background:#06111f}
+.zoon-body .pulse-rich-card>div{display:grid;gap:4px;padding:12px 14px}
+.zoon-body .pulse-rich-card strong{color:#fff}
+.zoon-body .pulse-rich-card span{font-size:.78rem;color:#8fa6b3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zoon-body .pulse-media-preview{display:grid;grid-template-columns:72px minmax(0,1fr) 36px;gap:10px;align-items:center;margin:10px 0;padding:10px;border:1px solid rgba(255,212,71,.14);border-radius:14px;background:#071b2a}
+.zoon-body .pulse-media-preview[hidden]{display:none}
+.zoon-body .pulse-media-preview img{width:72px;height:72px;border-radius:10px;object-fit:cover}
+.zoon-body .pulse-media-preview div{display:grid;gap:3px;min-width:0}
+.zoon-body .pulse-media-preview span{font-size:.75rem;color:#8fa6b3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zoon-body .pulse-media-preview button{border:0;background:#0d2638;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer}
+.zoon-body .pulse-toolset{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.zoon-body .pulse-tool-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,212,71,.18);background:#0d2638;color:#ffd447;border-radius:999px;padding:7px 10px;font-weight:700;cursor:pointer}
+
+.zoon-body .pulse-news-view{padding:0 0 48px}
+.zoon-body .pulse-news-intro{padding:22px 22px 18px;border-bottom:1px solid rgba(255,212,71,.11);background:linear-gradient(145deg,rgba(255,212,71,.08),rgba(9,25,44,.1))}
+.zoon-body .pulse-news-intro>span{font-size:.72rem;letter-spacing:.13em;color:#ffd447;font-weight:800}
+.zoon-body .pulse-news-intro h2{margin:6px 0 4px;font-size:1.28rem;color:#fff}
+.zoon-body .pulse-news-intro p{margin:0;color:#8fa6b3;line-height:1.45;font-size:.9rem}
+.zoon-body .pulse-news-grid{display:grid;gap:14px;padding:14px}
+.zoon-body .pulse-news-card{background:#0a2030;border:1px solid rgba(255,212,71,.11);border-radius:20px;overflow:hidden}
+.zoon-body .pulse-news-media{display:block;aspect-ratio:16/9;background:#06111f;overflow:hidden}
+.zoon-body .pulse-news-media img{width:100%;height:100%;display:block;object-fit:cover}
+.zoon-body .pulse-news-body{padding:16px}
+.zoon-body .pulse-news-meta{display:flex;gap:8px;align-items:center;color:#8fa6b3;font-size:.74rem}
+.zoon-body .pulse-news-meta>span:first-child{color:#ffd447;border:1px solid rgba(255,212,71,.26);border-radius:6px;padding:2px 5px;font-size:.62rem;font-weight:800;letter-spacing:.08em}
+.zoon-body .pulse-news-body h2{font-size:1.08rem;line-height:1.28;margin:9px 0 7px;color:#fff}
+.zoon-body .pulse-news-body p{color:#9fb0bd;line-height:1.48;margin:0;font-size:.91rem}
+.zoon-body .pulse-news-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.zoon-body .pulse-news-actions a{color:#a9bac6;font-size:.84rem}
+.zoon-body .pulse-news-actions button{border:1px solid rgba(255,212,71,.28);background:#ffd447;color:#061827;font-weight:800;border-radius:999px;padding:9px 13px;cursor:pointer}
+.zoon-body .pulse-news-actions button.done{background:#18384a;color:#9ff0cd;border-color:#2f6e67}
+
+@media(min-width:1000px){
+  .zoon-body .pulse-news-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .zoon-body .pulse-news-grid{padding:10px;gap:10px}
+  .zoon-body .pulse-news-card{border-radius:16px}
+  .zoon-body .pulse-news-actions{align-items:stretch;flex-direction:column}
+  .zoon-body .pulse-news-actions button{width:100%}
+  .zoon-body .pulse-post{padding:15px 14px}
+  .zoon-body .pulse-rich-card{margin-left:-4px;margin-right:-4px}
+}

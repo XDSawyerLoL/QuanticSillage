@@ -25,7 +25,7 @@ import android.widget.TextView;
 
 public final class MainActivity extends Activity {
     private static final String ZOON_URL =
-            "https://xdsawyerlol.github.io/QuanticSillage/zoon.html?android=1.1.3";
+            "https://xdsawyerlol.github.io/QuanticSillage/zoon.html?android=1.2.0";
 
     private static final int NAVY = Color.rgb(6, 24, 39);
     private static final int YELLOW = Color.rgb(255, 212, 71);
@@ -70,7 +70,7 @@ public final class MainActivity extends Activity {
             settings.setBuiltInZoomControls(false);
             settings.setDisplayZoomControls(false);
             settings.setUserAgentString(
-                    settings.getUserAgentString() + " ZOONAndroid/1.1.3"
+                    settings.getUserAgentString() + " ZOONAndroid/1.2.0"
             );
 
             next.clearCache(true);

@@ -25,6 +25,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate ZOON JavaScript
+        run: |
+          node --check zoon/app.js
+          node --check zoon/views.js
+          node --check zoon/core.js
+          node --check zoon/render.js
+          node --check backend/pulse.mjs
+
       - name: Java 17
         uses: actions/setup-java@v4
         with:

@@ -8,7 +8,7 @@
   <meta name="description" content="ZOON : réseau social public et communautaire.">
   <link rel="stylesheet" href="./site.css?v=20260919-2">
   <link rel="stylesheet" href="./pulse.css?v=5">
-  <link rel="stylesheet" href="./zoon.css?v=2">
+  <link rel="stylesheet" href="./zoon.css?v=3">
   <link rel="icon" type="image/webp" href="./assets/zoon-mark.webp">
 </head>
 <body class="pulse-body zoon-body">
@@ -78,8 +78,9 @@
       </section>
 
       <section class="pulse-tabs" id="feed-tabs" aria-label="Choisir le fil à afficher">
-        <button class="pulse-tab active" data-feed="following"><strong id="feed-following-label">Récent</strong><small id="feed-following-help">Les publications les plus récentes</small></button>
-        <button class="pulse-tab" data-feed="discover"><strong>Découvrir</strong><small>Des publications que vous ne suivez pas encore</small></button>
+        <button class="pulse-tab active" data-feed="following"><strong id="feed-following-label">Abonnements</strong><small id="feed-following-help">Les comptes que tu suis</small></button>
+        <button class="pulse-tab" data-feed="discover"><strong>Pour vous</strong><small>Publications recommandées et tendances</small></button>
+        <button class="pulse-tab pulse-tab-news" data-feed="news"><strong>Quantic News</strong><small>Flux RSS · repost direct</small></button>
       </section>
 
       <section class="pulse-composer" id="composer">
@@ -87,9 +88,12 @@
         <div class="pulse-compose-main">
           <div class="pulse-context" id="pulse-context" hidden></div>
           <textarea id="pulse-text" maxlength="420" placeholder="Qu'est-ce qui mérite de circuler ?"></textarea>
+          <div class="pulse-media-preview" id="pulse-media-preview" hidden></div>
           <div class="pulse-compose-tools">
             <div class="pulse-toolset">
-              <button title="Annuler la réponse" id="cancel-context" hidden aria-label="Annuler la réponse"><svg class="pi " aria-hidden="true"><use href="#pi-close"></use></svg></button>
+              <button class="pulse-tool-btn" type="button" data-tool="image" title="Ajouter une image HTTPS">Image</button>
+              <button class="pulse-tool-btn" type="button" data-tool="news" title="Ouvrir Quantic News"><svg class="pi" aria-hidden="true"><use href="#pi-news"></use></svg><span>News</span></button>
+              <button class="pulse-tool-btn pulse-tool-close" title="Annuler la réponse" id="cancel-context" hidden aria-label="Annuler la réponse"><svg class="pi " aria-hidden="true"><use href="#pi-close"></use></svg></button>
             </div>
             <div class="pulse-compose-right"><span id="pulse-count">0 / 420</span><button class="pulse-publish" id="pulse-publish" disabled>Publier</button></div>
           </div>
@@ -138,6 +142,6 @@
   </div>
 
   <script src="./zoon-config.js?v=1"></script>
-  <script type="module" src="./zoon/app.js?v=1"></script>
+  <script type="module" src="./zoon/app.js?v=2"></script>
 </body>
 </html>

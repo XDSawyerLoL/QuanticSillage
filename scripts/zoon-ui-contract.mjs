@@ -7,7 +7,6 @@ const forbidden=[
   'quantic-shell.css',
   'quantic-shell.js',
   'QuanticMail',
-  'Quantic News',
   'Écosystème',
   'pulse.html'
 ];
@@ -20,6 +19,10 @@ for(const token of forbidden){
 
 if(!html.includes('./assets/zoon-mark.webp')){
   throw new Error('ZOON approved logo is missing from zoon.html');
+}
+
+if(!html.includes('data-feed="news"')||!html.includes('Quantic News')){
+  throw new Error('ZOON 1.2 must expose the embedded Quantic News feed');
 }
 
 if(!android.includes('https://xdsawyerlol.github.io/QuanticSillage/zoon.html')){

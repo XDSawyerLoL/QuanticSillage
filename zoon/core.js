@@ -1,6 +1,6 @@
 export const API_BASE=String(window.ZOON_API_BASE||'').replace(/\/$/,'');
 export const TOKEN_KEY='zoon_token';
-export const state={token:localStorage.getItem(TOKEN_KEY)||'',user:null,feed:'following',view:'home',replyTo:null,authMode:'login'};
+export const state={token:localStorage.getItem(TOKEN_KEY)||'',user:null,feed:'following',view:'home',replyTo:null,authMode:'login',attachment:null};
 
 export const dom={
   feed:document.getElementById('pulse-feed'),
