@@ -82,11 +82,14 @@ jobs:
       - name: Check ZOON API
         run: |
           for attempt in {1..10}; do
-            if curl -fsS --max-time 20 https://quantic-pulse-api.onrender.com/api/pulse/health | grep -q '"ok":true'; then
+            BODY="$(curl -fsS --max-time 20 -H 'Origin: https://appassets.androidplatform.net' -D /tmp/zoon-headers.txt https://quantic-pulse-api.onrender.com/api/pulse/health || true)"
+            if echo "$BODY" | grep -q '"ok":true' && grep -qi 'access-control-allow-origin: https://appassets.androidplatform.net' /tmp/zoon-headers.txt; then
               exit 0
             fi
             sleep 4
           done
+          echo "ZOON API or Android CORS is not ready"
+          cat /tmp/zoon-headers.txt || true
           exit 1
 
       - name: Download APK
@@ -113,7 +116,7 @@ jobs:
             adb logcat -c
             adb shell am force-stop com.quanticsillage.zoon.test
             adb shell am start -W -n com.quanticsillage.zoon.test/com.quanticsillage.zoon.MainActivity
-            sleep 10
+            sleep 25
             adb shell ps -A | grep -q "[c]om.quanticsillage.zoon.test"
             adb shell dumpsys activity activities | grep -q "com.quanticsillage.zoon.test/com.quanticsillage.zoon.MainActivity"
             ! adb logcat -d | grep -E -q "Process: com.quanticsillage.zoon.test|FATAL EXCEPTION.*ZOON"
