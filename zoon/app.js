@@ -224,13 +224,16 @@ function bindStaticEvents(){
     loadExplore(search.value);
   });
 
-  window.addEventListener('online',function(){setNetworkState(true);retryCurrentView()});
+  window.addEventListener('online',async function(){setNetworkState(true);await restoreSession().catch(()=>{});retryCurrentView()});
   window.addEventListener('offline',function(){setNetworkState(false,'Tu es hors ligne · lecture du cache disponible')});
 }
 
 function bindDelegatedEvents(){
   document.addEventListener('click',async function(event){
-    if(event.target.closest('[data-retry-home]')){loadHome();return}
+    if(event.target.closest('[data-retry-home]')){retryCurrentView();return}
+
+    const circleView=event.target.closest('.circle[data-view="circles"]');
+    if(circleView){loadCircles();return}
 
     const profile=event.target.closest('[data-profile]');
     if(profile){loadProfile(profile.dataset.profile);return}
