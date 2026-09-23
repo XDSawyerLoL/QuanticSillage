@@ -5,13 +5,23 @@ on:
   push:
     branches:
       - main
-      - zoon-android-runtime-fix
+      - zoon-product-v2
     paths:
       - 'zoon-android/**'
+      - 'zoon/**'
+      - 'zoon.html'
+      - 'zoon.css'
+      - 'zoon-config.js'
+      - 'pulse.css'
       - '.github/workflows/zoon-android.yml'
   pull_request:
     paths:
       - 'zoon-android/**'
+      - 'zoon/**'
+      - 'zoon.html'
+      - 'zoon.css'
+      - 'zoon-config.js'
+      - 'pulse.css'
       - '.github/workflows/zoon-android.yml'
 
 permissions:
@@ -40,6 +50,12 @@ jobs:
         working-directory: zoon-android
         run: gradle :app:lintDebug :app:assembleDebug --stacktrace
 
+      - name: Verify bundled ZOON product
+        run: |
+          unzip -l zoon-android/app/build/outputs/apk/debug/app-debug.apk | grep -q 'assets/zoon.html'
+          unzip -l zoon-android/app/build/outputs/apk/debug/app-debug.apk | grep -q 'assets/zoon/app.js'
+          unzip -l zoon-android/app/build/outputs/apk/debug/app-debug.apk | grep -q 'assets/zoon.css'
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -60,6 +76,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Check ZOON API
+        run: |
+          for attempt in {1..10}; do
+            if curl -fsS --max-time 20 https://quantic-pulse-api.onrender.com/api/pulse/health | grep -q '"ok":true'; then
+              exit 0
+            fi
+            sleep 4
+          done
+          exit 1
 
       - name: Download APK
         uses: actions/download-artifact@v4
@@ -85,12 +111,17 @@ jobs:
             adb logcat -c
             adb shell am force-stop com.quanticsillage.zoon.test
             adb shell am start -W -n com.quanticsillage.zoon.test/com.quanticsillage.zoon.MainActivity
-            sleep 8
-            echo "=== ZOON process ==="
-            adb shell ps -A | grep com.quanticsillage.zoon || true
-            echo "=== ZOON activity ==="
-            adb shell dumpsys activity activities | grep -A6 -B3 com.quanticsillage.zoon || true
-            echo "=== Relevant logcat ==="
-            adb logcat -d -v time | grep -E -A20 -B8 "FATAL EXCEPTION|AndroidRuntime|com.quanticsillage.zoon|chromium|WebViewFactory" || true
+            sleep 10
             adb shell ps -A | grep -q "[c]om.quanticsillage.zoon.test"
             adb shell dumpsys activity activities | grep -q "com.quanticsillage.zoon.test/com.quanticsillage.zoon.MainActivity"
+            if adb logcat -d | grep -E "FATAL EXCEPTION.*com.quanticsillage.zoon|Process: com.quanticsillage.zoon.test" ; then
+              exit 1
+            fi
+            adb exec-out screencap -p > /tmp/zoon-screen.png
+
+      - name: Upload Android screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZOON-Android-screenshot
+          path: /tmp/zoon-screen.png
+          if-no-files-found: error
