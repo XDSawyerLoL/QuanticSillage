@@ -52,14 +52,16 @@ export async function registerQuanticSillageProducts(publicEndpoint=''){
   let ok=true;
   for(const product of PRODUCTS){
     try{
-      await post('/api/aura/products/register',{
+      await post('/api/aura/everywhere/register',{
         ...product,
         endpoint:publicEndpoint,
         state:'online',
-        writable_by_aura:true,
-        modification_policy:'branch-test-canary-promote',
-        bridge_version:BRIDGE_VERSION,
-        runtime:{
+        permissions:['observe','propose-change','test','canary'],
+        surfaces: product.id==='quantic-news' ? ['news','rss','publishing'] : ['social','feed','media'],
+        metadata:{
+          writable_by_aura:true,
+          modification_policy:'branch-test-canary-promote',
+          bridge_version:BRIDGE_VERSION,
           backend:'quantic-sillage-backend',
           content_exposure:'public-or-operational-metadata-only'
         }
@@ -74,7 +76,7 @@ export async function registerQuanticSillageProducts(publicEndpoint=''){
 export async function observeQuanticSillageProduct(id,state='online',detail='',metadata={}){
   if(!AURA_TOKEN)return false;
   try{
-    await post('/api/aura/products/'+encodeURIComponent(id)+'/observe',{
+    await post('/api/aura/everywhere/'+encodeURIComponent(id)+'/observe',{
       state,detail,
       metadata:{
         ...metadata,
@@ -96,7 +98,7 @@ export function startAuraHeartbeat(publicEndpoint=''){
     for(const product of PRODUCTS){
       void observeQuanticSillageProduct(product.id,'online','Backend Quantic Sillage actif.',{public_endpoint:publicEndpoint});
     }
-  },300000);
+  },120000);
   timer.unref?.();
 }
 
