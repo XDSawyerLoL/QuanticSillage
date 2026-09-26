@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomBytes, createHash, createHmac, createCipheriv, createDecipheriv, timingSafeEqual } from 'node:crypto';
 import { handlePulse, pulseInfo } from './pulse.mjs';
+import { startAuraHeartbeat, stopAuraHeartbeat } from './aura-bridge.mjs';
 
 const PORT=Number(process.env.PORT||8787);
 const PUBLIC_BASE_URL=String(process.env.PUBLIC_BASE_URL||'').replace(/\/$/,'');
@@ -126,4 +127,14 @@ async function handler(req,res){const c=cors(req);if(req.method==='OPTIONS'){res
 }catch(e){console.error(e);return json(res,500,{error:'internal_error',message:String(e.message||e).slice(0,220)},c)}}
 
 await ensureStore();
-createServer(handler).listen(PORT,'0.0.0.0',()=>console.log(`Quantic News LinkedIn backend listening on :${PORT}`));
+const server=createServer(handler);
+server.listen(PORT,'0.0.0.0',()=>{
+  console.log(`Quantic News LinkedIn backend listening on :${PORT}`);
+  startAuraHeartbeat(PUBLIC_BASE_URL||`http://127.0.0.1:${PORT}`);
+});
+const shutdown=()=>{
+  stopAuraHeartbeat();
+  server.close(()=>process.exit(0));
+};
+process.once('SIGINT',shutdown);
+process.once('SIGTERM',shutdown);
