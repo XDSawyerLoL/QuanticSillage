@@ -52,16 +52,14 @@ export async function registerQuanticSillageProducts(publicEndpoint=''){
   let ok=true;
   for(const product of PRODUCTS){
     try{
-      await post('/api/aura/everywhere/register',{
+      await post('/api/aura/products/register',{
         ...product,
         endpoint:publicEndpoint,
         state:'online',
-        permissions:['observe','propose-change','test','canary'],
-        surfaces: product.id==='quantic-news' ? ['news','rss','publishing'] : ['social','feed','media'],
-        metadata:{
-          writable_by_aura:true,
-          modification_policy:'branch-test-canary-promote',
-          bridge_version:BRIDGE_VERSION,
+        writable_by_aura:true,
+        modification_policy:'branch-test-canary-promote',
+        bridge_version:BRIDGE_VERSION,
+        runtime:{
           backend:'quantic-sillage-backend',
           content_exposure:'public-or-operational-metadata-only'
         }
@@ -76,7 +74,7 @@ export async function registerQuanticSillageProducts(publicEndpoint=''){
 export async function observeQuanticSillageProduct(id,state='online',detail='',metadata={}){
   if(!AURA_TOKEN)return false;
   try{
-    await post('/api/aura/everywhere/'+encodeURIComponent(id)+'/observe',{
+    await post('/api/aura/products/'+encodeURIComponent(id)+'/observe',{
       state,detail,
       metadata:{
         ...metadata,
