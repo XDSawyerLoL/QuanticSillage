@@ -1,0 +1,38 @@
+name: Build Quantic Live Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/quantic-live-v0.1"
+    tags:
+      - "quantic-live-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/quantic-live
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/quantic-live
+      - name: Build release
+        run: cargo build --release
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target/release/quantic-live.exe dist/Quantic-Live.exe
+          Copy-Item README.md dist/README.md
+          Compress-Archive -Path dist/* -DestinationPath Quantic-Live-Windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quantic-Live-Windows-x64
+          path: apps/quantic-live/Quantic-Live-Windows-x64.zip
