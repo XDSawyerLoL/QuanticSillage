@@ -322,6 +322,12 @@
   line-height:1.7;
   margin:0 0 22px;
 }
+.glide-detail-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 .glide-statusbar{
   min-height:34px;
   display:flex;
