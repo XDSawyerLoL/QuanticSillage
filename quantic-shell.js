@@ -1,5 +1,6 @@
 (()=>{"use strict";
 const SECURE_BRIDGE="http://127.0.0.1:47621";
+const QUANTIC_ID_ACCESS_ENABLED=false;
 const APPS=[
 ["Sillage","index.html"],["Pulse","pulse.html"],["Mail","https://quanticmail.onrender.com"],["News","news.html"],["Vision","solutions.html#providence"],["Glide","solutions.html#browser"],["OS","solutions.html#quanticos"]
 ];
@@ -57,6 +58,16 @@ function appSwitcher(){
  box.append(b,m);document.body.appendChild(box)
 }
 function boot(){
+ if(!QUANTIC_ID_ACCESS_ENABLED){
+   document.querySelectorAll("[data-quantic-enter]").forEach((button)=>{
+     button.hidden=true;
+     button.setAttribute("aria-hidden","true");
+     button.disabled=true;
+   });
+   document.documentElement.dataset.quanticIdentityGate="suspended";
+   appSwitcher();
+   return;
+ }
  const buttons=ensureEnterButtons(),o=createOverlay();
  buttons.forEach(b=>b.addEventListener("click",()=>{o.hidden=false;document.body.style.overflow="hidden";detectIdentity()}));
  appSwitcher()
