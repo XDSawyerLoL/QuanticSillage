@@ -1,6 +1,13 @@
 const AURA_URL=String(process.env.AURA_CLOUD_URL||'https://antiquewhite-dolphin-780448.hostingersite.com').replace(/\/$/,'');
-const AURA_TOKEN=String(process.env.AURA_CLOUD_TOKEN||'').trim();
-const BRIDGE_VERSION='aura-universal-bridge-v1';
+const LEGACY_ALLOWED=['1','true','yes','oui','on'].includes(String(process.env.AURA_ALLOW_LEGACY_PRODUCT_ADMIN_TOKEN||'').trim().toLowerCase());
+const LEGACY_TOKEN=LEGACY_ALLOWED?String(process.env.AURA_CLOUD_TOKEN||'').trim():'';
+const PRODUCT_TOKENS={
+  zoon:String(process.env.AURA_ZOON_TOKEN||process.env.AURA_PRODUCT_TOKEN_ZOON||'').trim(),
+  pulse:String(process.env.AURA_PULSE_TOKEN||process.env.AURA_PRODUCT_TOKEN_PULSE||'').trim(),
+  'quantic-news':String(process.env.AURA_QUANTIC_NEWS_TOKEN||process.env.AURA_PRODUCT_TOKEN_QUANTIC_NEWS||'').trim(),
+};
+const tokenFor=(id)=>PRODUCT_TOKENS[id]||LEGACY_TOKEN;
+const BRIDGE_VERSION='aura-universal-bridge-v2-scoped';
 
 const PRODUCTS=[
   {
@@ -29,14 +36,15 @@ const PRODUCTS=[
   }
 ];
 
-async function post(path,body){
-  if(!AURA_TOKEN)return null;
+async function post(productId,path,body){
+  const token=tokenFor(productId);
+  if(!token)return null;
   const r=await fetch(AURA_URL+path,{
     method:'POST',
     headers:{
       'content-type':'application/json',
       accept:'application/json',
-      authorization:'Bearer '+AURA_TOKEN,
+      authorization:'Bearer '+token,
       'user-agent':'QuanticSillage/AURA-Bridge-1'
     },
     body:JSON.stringify(body),
@@ -48,11 +56,11 @@ async function post(path,body){
 }
 
 export async function registerQuanticSillageProducts(publicEndpoint=''){
-  if(!AURA_TOKEN)return false;
+  if(!PRODUCTS.some((product)=>Boolean(tokenFor(product.id))))return false;
   let ok=true;
   for(const product of PRODUCTS){
     try{
-      await post('/api/aura/products/register',{
+      await post(product.id,'/api/aura/products/register',{
         ...product,
         endpoint:publicEndpoint,
         state:'online',
@@ -72,9 +80,9 @@ export async function registerQuanticSillageProducts(publicEndpoint=''){
 }
 
 export async function observeQuanticSillageProduct(id,state='online',detail='',metadata={}){
-  if(!AURA_TOKEN)return false;
+  if(!tokenFor(id))return false;
   try{
-    await post('/api/aura/products/'+encodeURIComponent(id)+'/observe',{
+    await post(id,'/api/aura/products/'+encodeURIComponent(id)+'/observe',{
       state,detail,
       metadata:{
         ...metadata,
@@ -90,7 +98,7 @@ export async function observeQuanticSillageProduct(id,state='online',detail='',m
 
 let timer=null;
 export function startAuraHeartbeat(publicEndpoint=''){
-  if(!AURA_TOKEN||timer)return;
+  if(!PRODUCTS.some((product)=>Boolean(tokenFor(product.id)))||timer)return;
   void registerQuanticSillageProducts(publicEndpoint);
   timer=setInterval(()=>{
     for(const product of PRODUCTS){
