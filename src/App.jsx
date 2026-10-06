@@ -2,7 +2,6 @@ import { motion } from 'framer-motion'
 import {
   ArrowRight,
   BrainCircuit,
-  Chrome,
   Compass,
   DatabaseZap,
   Eye,
@@ -41,7 +40,7 @@ const projects = [
     kicker: 'Navigation privée',
     copy: 'Un navigateur natif orienté contrôle, fluidité, confidentialité et portabilité, construit sans Chromium autour du moteur hybride Gecko / Ladybird / Servo.',
     status: 'En développement',
-    icon: Chrome,
+    icon: Globe2,
     portal: true,
   },
   {
