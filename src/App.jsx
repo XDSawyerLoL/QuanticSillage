@@ -2,7 +2,6 @@ import { motion } from 'framer-motion'
 import {
   ArrowRight,
   BrainCircuit,
-  Chrome,
   Compass,
   DatabaseZap,
   Eye,
@@ -15,6 +14,16 @@ import {
   ShieldCheck,
   Sparkles,
   X,
+  Search,
+  LockKeyhole,
+  Mail,
+  MessageCircle,
+  Newspaper,
+  Github,
+  ExternalLink,
+  Gauge,
+  Wifi,
+  Zap,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -27,11 +36,12 @@ const projects = [
     icon: Orbit,
   },
   {
-    name: 'Quantic Browser',
+    name: 'Quantic Glide',
     kicker: 'Navigation privée',
-    copy: 'Un navigateur natif orienté contrôle, fluidité, confidentialité et portabilité, construit autour de Chromium/CEF.',
+    copy: 'Un navigateur natif orienté contrôle, fluidité, confidentialité et portabilité, construit sans Chromium autour du moteur hybride Gecko / Ladybird / Servo.',
     status: 'En développement',
-    icon: Chrome,
+    icon: Globe2,
+    portal: true,
   },
   {
     name: 'Providence',
@@ -140,6 +150,145 @@ function SectionTitle({ eyebrow, title, text }) {
   )
 }
 
+
+const glideShortcuts = [
+  { id: 'aura', name: 'AURA', sub: 'Company OS', icon: BrainCircuit, tone: 'violet', href: 'https://antiquewhite-dolphin-780448.hostingersite.com/' },
+  { id: 'mail', name: 'Quantic Mail', sub: 'Messagerie privée', icon: Mail, tone: 'cyan', href: './projects.html' },
+  { id: 'zoon', name: 'ZOON', sub: 'Réseau social', icon: MessageCircle, tone: 'gold', href: './zoon.html' },
+  { id: 'news', name: 'Quantic News', sub: 'Flux & veille', icon: Newspaper, tone: 'blue', href: './news.html' },
+  { id: 'providence', name: 'Providence', sub: 'Analyse & prospective', icon: Compass, tone: 'silver', href: './projects.html' },
+]
+
+function GlidePortal() {
+  const [query, setQuery] = useState('')
+  const [active, setActive] = useState('home')
+
+  const launchSearch = () => {
+    const value = query.trim()
+    if (!value) return
+    const target = /^https?:\/\//i.test(value)
+      ? value
+      : 'https://duckduckgo.com/?q=' + encodeURIComponent(value)
+    window.open(target, '_blank', 'noopener,noreferrer')
+  }
+
+  return (
+    <section id="browser" className="section glide-portal-section">
+      <div className="glide-portal-heading">
+        <SectionTitle
+          eyebrow="Portail navigateur"
+          title={<>Quantic Glide devient la <span className="blue">porte d’entrée de Sillage.</span></>}
+          text="Un point de départ unique pour naviguer, rechercher et rejoindre les services Quantic sans perdre la logique de confidentialité du navigateur."
+        />
+        <div className="glide-portal-actions">
+          <a className="button primary" href="https://github.com/XDSawyerLoL/Quantic-Browser" target="_blank" rel="noreferrer">
+            Ouvrir le projet <Github size={16} />
+          </a>
+          <a className="button ghost" href="#projects">Voir l’écosystème</a>
+        </div>
+      </div>
+
+      <motion.div
+        className="glide-browser"
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: .2 }}
+        transition={{ duration: .65 }}
+      >
+        <div className="glide-browser-top">
+          <div className="glide-window-controls"><i /><i /><i /></div>
+          <div className="glide-tabs">
+            <button className={active === 'home' ? 'active' : ''} onClick={() => setActive('home')}>
+              <Globe2 size={13} /> Accueil Sillage
+            </button>
+            <button className={active === 'privacy' ? 'active' : ''} onClick={() => setActive('privacy')}>
+              <ShieldCheck size={13} /> Confidentialité
+            </button>
+          </div>
+          <div className="glide-engine"><span className="glide-engine-dot" /> Gecko · Ladybird · Servo</div>
+        </div>
+
+        <div className="glide-toolbar">
+          <button className="glide-tool" aria-label="Accueil" onClick={() => setActive('home')}><Orbit size={17} /></button>
+          <div className="glide-address">
+            <LockKeyhole size={15} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && launchSearch()}
+              placeholder="Rechercher sur le web ou saisir une adresse"
+              aria-label="Recherche Glide"
+            />
+            <button onClick={launchSearch} aria-label="Rechercher"><Search size={17} /></button>
+          </div>
+          <div className="glide-privacy-pill"><ShieldCheck size={14} /> Protection active</div>
+        </div>
+
+        <div className="glide-viewport">
+          <div className="glide-ambient one" />
+          <div className="glide-ambient two" />
+
+          {active === 'home' ? (
+            <div className="glide-home">
+              <div className="glide-home-copy">
+                <div className="glide-mini-brand"><span className="glide-orb" /> QUANTIC GLIDE</div>
+                <h3>Le web, sans perdre le contrôle.</h3>
+                <p>Glide rassemble la navigation privée et l’écosystème Quantic dans un portail sobre, rapide et portable.</p>
+              </div>
+
+              <div className="glide-shortcuts" aria-label="Services Quantic">
+                {glideShortcuts.map(({ id, name, sub, icon: Icon, tone }) => (
+                  <button key={id} className="glide-shortcut" onClick={() => setActive(id)}>
+                    <span className={'shortcut-icon ' + tone}><Icon size={20} /></span>
+                    <strong>{name}</strong>
+                    <small>{sub}</small>
+                  </button>
+                ))}
+              </div>
+
+              <div className="glide-live-strip">
+                <div><Wifi size={14} /><span>DNS sécurisé</span><strong>Par défaut</strong></div>
+                <div><ShieldCheck size={14} /><span>Traqueurs</span><strong>Blocage</strong></div>
+                <div><Fingerprint size={14} /><span>Fingerprint</span><strong>Réduction</strong></div>
+                <div><Zap size={14} /><span>Mode portable</span><strong>USB</strong></div>
+              </div>
+            </div>
+          ) : active === 'privacy' ? (
+            <div className="glide-detail-screen">
+              <div className="glide-detail-icon"><ShieldCheck size={34} /></div>
+              <div>
+                <span className="eyebrow">Protection par défaut</span>
+                <h3>La confidentialité n’est pas un mode à activer.</h3>
+                <p>Cookies tiers bloqués, géolocalisation refusée par défaut, fuite WebRTC limitée, suppression des données à la fermeture et DNS sécurisé.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="glide-detail-screen">
+              <div className="glide-detail-icon"><ExternalLink size={34} /></div>
+              <div>
+                <span className="eyebrow">Portail Quantic</span>
+                <h3>{glideShortcuts.find(item => item.id === active)?.name}</h3>
+                <p>{glideShortcuts.find(item => item.id === active)?.sub} — accessible depuis Glide comme une brique native de l’écosystème Quantic Sillage.</p>
+                <div className="glide-detail-actions">
+                  <a className="button primary" href={glideShortcuts.find(item => item.id === active)?.href}>Ouvrir le service <ExternalLink size={15} /></a>
+                  <button className="button ghost" onClick={() => setActive('home')}>Retour au portail</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="glide-statusbar">
+          <span><Gauge size={13} /> Navigation privée</span>
+          <span><ShieldCheck size={13} /> Zéro Chromium</span>
+          <span className="glide-status-spacer" />
+          <span>Quantic Sillage · Glide Portal</span>
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -155,6 +304,7 @@ export default function App() {
         <nav className="desktop-nav">
           <a href="#lab">Le Lab</a>
           <a href="#projects">Projets</a>
+          <a href="#browser">Glide</a>
           <a href="#research">Recherche</a>
           <a href="#team">Équipe</a>
           <a href="#press">Presse</a>
@@ -168,8 +318,8 @@ export default function App() {
 
       {menuOpen && (
         <div className="mobile-menu">
-          {['lab','projects','research','team','press','contact'].map(id => (
-            <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{id === 'research' ? 'Recherche' : id === 'team' ? 'Équipe' : id === 'press' ? 'Presse' : id === 'projects' ? 'Projets' : id === 'contact' ? 'Contact' : 'Le Lab'}</a>
+          {['lab','projects','browser','research','team','press','contact'].map(id => (
+            <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{id === 'browser' ? 'Glide' : id === 'research' ? 'Recherche' : id === 'team' ? 'Équipe' : id === 'press' ? 'Presse' : id === 'projects' ? 'Projets' : id === 'contact' ? 'Contact' : 'Le Lab'}</a>
           ))}
         </div>
       )}
@@ -207,7 +357,9 @@ export default function App() {
                   <div className="project-kicker">{project.kicker}</div>
                   <h3>{project.name}</h3>
                   <p>{project.copy}</p>
-                  <button>Explorer <ArrowRight size={16} /></button>
+                  {project.portal
+                    ? <a className="project-explore-link" href="#browser">Ouvrir le portail <ArrowRight size={16} /></a>
+                    : <button>Explorer <ArrowRight size={16} /></button>}
                 </motion.article>
               )
             })}
@@ -219,6 +371,8 @@ export default function App() {
             </article>
           </div>
         </section>
+
+        <GlidePortal />
 
         <section id="lab" className="section lab-section">
           <div className="lab-image" />
