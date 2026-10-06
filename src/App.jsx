@@ -152,11 +152,11 @@ function SectionTitle({ eyebrow, title, text }) {
 
 
 const glideShortcuts = [
-  { id: 'aura', name: 'AURA', sub: 'Company OS', icon: BrainCircuit, tone: 'violet' },
-  { id: 'mail', name: 'Quantic Mail', sub: 'Messagerie privée', icon: Mail, tone: 'cyan' },
-  { id: 'zoon', name: 'ZOON', sub: 'Réseau social', icon: MessageCircle, tone: 'gold' },
-  { id: 'news', name: 'Quantic News', sub: 'Flux & veille', icon: Newspaper, tone: 'blue' },
-  { id: 'providence', name: 'Providence', sub: 'Analyse & prospective', icon: Compass, tone: 'silver' },
+  { id: 'aura', name: 'AURA', sub: 'Company OS', icon: BrainCircuit, tone: 'violet', href: 'https://antiquewhite-dolphin-780448.hostingersite.com/' },
+  { id: 'mail', name: 'Quantic Mail', sub: 'Messagerie privée', icon: Mail, tone: 'cyan', href: './projects.html' },
+  { id: 'zoon', name: 'ZOON', sub: 'Réseau social', icon: MessageCircle, tone: 'gold', href: './zoon.html' },
+  { id: 'news', name: 'Quantic News', sub: 'Flux & veille', icon: Newspaper, tone: 'blue', href: './news.html' },
+  { id: 'providence', name: 'Providence', sub: 'Analyse & prospective', icon: Compass, tone: 'silver', href: './projects.html' },
 ]
 
 function GlidePortal() {
@@ -168,7 +168,7 @@ function GlidePortal() {
     if (!value) return
     const target = /^https?:\/\//i.test(value)
       ? value
-      : 'https://www.google.com/search?q=' + encodeURIComponent(value)
+      : 'https://duckduckgo.com/?q=' + encodeURIComponent(value)
     window.open(target, '_blank', 'noopener,noreferrer')
   }
 
@@ -247,10 +247,10 @@ function GlidePortal() {
               </div>
 
               <div className="glide-live-strip">
-                <div><Wifi size={14} /><span>DNS sécurisé</span><strong>Actif</strong></div>
-                <div><ShieldCheck size={14} /><span>Traqueurs</span><strong>Bloqués</strong></div>
-                <div><Fingerprint size={14} /><span>Fingerprint</span><strong>Limité</strong></div>
-                <div><Zap size={14} /><span>Mode portable</span><strong>Prêt</strong></div>
+                <div><Wifi size={14} /><span>DNS sécurisé</span><strong>Par défaut</strong></div>
+                <div><ShieldCheck size={14} /><span>Traqueurs</span><strong>Blocage</strong></div>
+                <div><Fingerprint size={14} /><span>Fingerprint</span><strong>Réduction</strong></div>
+                <div><Zap size={14} /><span>Mode portable</span><strong>USB</strong></div>
               </div>
             </div>
           ) : active === 'privacy' ? (
@@ -269,7 +269,10 @@ function GlidePortal() {
                 <span className="eyebrow">Portail Quantic</span>
                 <h3>{glideShortcuts.find(item => item.id === active)?.name}</h3>
                 <p>{glideShortcuts.find(item => item.id === active)?.sub} — accessible depuis Glide comme une brique native de l’écosystème Quantic Sillage.</p>
-                <button className="button primary" onClick={() => setActive('home')}>Retour au portail</button>
+                <div className="glide-detail-actions">
+                  <a className="button primary" href={glideShortcuts.find(item => item.id === active)?.href}>Ouvrir le service <ExternalLink size={15} /></a>
+                  <button className="button ghost" onClick={() => setActive('home')}>Retour au portail</button>
+                </div>
               </div>
             </div>
           )}
