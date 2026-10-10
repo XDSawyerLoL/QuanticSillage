@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {generateKeyPairSync,sign} from 'node:crypto';
+
+test('Quantic Secure proof creates a real SOCIAL session; replay and forged signatures are denied',async t=>{
+ const dir=await mkdtemp(join(tmpdir(),'quantic-social-id-'));
+ process.env.DATA_DIR=dir;
+ delete process.env.PULSE_DATABASE_URL;
+ delete process.env.PULSE_DB_HOST;
+ delete process.env.PULSE_DB_USER;
+ delete process.env.PULSE_DB_PASSWORD;
+ delete process.env.PULSE_DB_NAME;
+ const {handlePulse}=await import('./pulse.mjs?quantic_e2e='+Date.now());
+ const server=createServer((req,res)=>handlePulse(req,res,new URL(req.url,'http://127.0.0.1'),{}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ t.after(async()=>{await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true})});
+ const root='http://127.0.0.1:'+server.address().port;
+ const post=async(path,payload,token='')=>{
+  const response=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify(payload)});
+  return {status:response.status,body:await response.json()};
+ };
+ const keys=generateKeyPairSync('ed25519');
+ const publicKey=keys.publicKey.export({format:'jwk'});
+ const challenge=(await post('/api/pulse/auth/quantic/challenge',{})).body.challenge;
+ assert.match(challenge,/^quantic-social:v1:[A-Za-z0-9_-]{43}$/);
+ const signature=sign(null,Buffer.from(challenge),keys.privateKey).toString('base64url');
+ const assertion={challenge,keyId:'qid_flow_test',signature,algorithm:'Ed25519',publicKey};
+ const result=await post('/api/pulse/auth/quantic/complete',assertion);
+ assert.equal(result.status,200,JSON.stringify(result.body));
+ assert.ok(result.body.token?.length>=24);
+ assert.equal(result.body.expiresInMs,12000);
+ const who=await fetch(root+'/api/pulse/me',{headers:{authorization:'Bearer '+result.body.token}});
+ assert.equal(who.status,200);
+ const replay=await post('/api/pulse/auth/quantic/complete',assertion);
+ assert.equal(replay.status,409);
+ assert.equal(replay.body.error,'expired_or_replayed_challenge');
+ const challenge2=(await post('/api/pulse/auth/quantic/challenge',{})).body.challenge;
+ const forgery=await post('/api/pulse/auth/quantic/complete',{...assertion,challenge:challenge2,signature:'A'.repeat(86)});
+ assert.equal(forgery.status,400);
+ assert.equal(forgery.body.error,'invalid_quantic_signature');
+});
