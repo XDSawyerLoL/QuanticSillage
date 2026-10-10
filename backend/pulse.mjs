@@ -98,13 +98,18 @@ export async function handlePulse(req,res,url,corsHeaders={}){
     if(route==='/api/pulse/auth/quantic/challenge'&&req.method==='POST'){
       if(!allowRate(req,'quantic-challenge',30,60000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
       const challenge=newQuanticChallenge(),expiresAt=Date.now()+QUANTIC_CHALLENGE_MS;
-      await mutateStore(store=>{
+      const capacity=await mutateStore(store=>{
         store.quanticChallenges||={};
         for(const [k,v] of Object.entries(store.quanticChallenges)){
           if(v.expiresAt<Date.now())delete store.quanticChallenges[k];
         }
+        // Prevent unauthenticated nonce requests from inflating the entire
+        // persisted SOCIAL document without bound, even behind a proxy.
+        if(Object.keys(store.quanticChallenges).length>=512)return false;
         store.quanticChallenges[sha(challenge)]={expiresAt};
+        return true;
       });
+      if(!capacity){json(res,429,{error:'quantic_challenge_capacity'},corsHeaders);return true}
       json(res,200,{challenge,relyingParty:'quanticminds.onrender.com',
         algorithm:'Ed25519',expiresInMs:QUANTIC_CHALLENGE_MS},corsHeaders);
       return true
