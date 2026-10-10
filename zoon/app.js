@@ -129,7 +129,7 @@ async function health(){
 // It carries a backend-issued short-lived token, never an identity private key.
 window.addEventListener('quantic-gekkko-session',event=>{
   if(location.origin!=='https://xdsawyerlol.github.io'||
-    !/^\\/QuanticSillage\\/zoon(?:\\.html)?$/.test(location.pathname))return;
+    !['/QuanticSillage/zoon.html','/QuanticSillage/zoon'].includes(location.pathname))return;
   const session=event.detail;
   if(session?.token && typeof session.token==='string' && session.user?.id){
     const first=!state.user;
