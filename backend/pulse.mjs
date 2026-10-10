@@ -1,6 +1,8 @@
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomBytes, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
+import { newQuanticChallenge, validQuanticChallenge, identityFingerprint, verifyQuanticProof,
+  normalizeQuanticAssertion, QUANTIC_CHALLENGE_MS, QUANTIC_SESSION_MS } from './quantic-id-auth.mjs';
 
 const DATA_DIR=process.env.DATA_DIR||'./data';
 const FILE=join(DATA_DIR,'pulse.json');
@@ -13,7 +15,7 @@ const useMysql=!usePostgres&&!!(MYSQL.host&&MYSQL.user&&MYSQL.database);
 let pgPool=null,mysqlPool=null,writeQueue=Promise.resolve();
 const rate=new Map();
 
-function emptyStore(){return{version:1,users:{},handles:{},sessions:{},posts:{},follows:{},likes:{},reposts:{},bookmarks:{},circles:{},circleMembers:{},notifications:{},reports:{},blocks:{},conversations:{},messages:{}}}
+function emptyStore(){return{version:1,users:{},handles:{},sessions:{},posts:{},follows:{},likes:{},reposts:{},bookmarks:{},circles:{},circleMembers:{},notifications:{},reports:{},blocks:{},conversations:{},messages:{},quanticChallenges:{},quanticKeys:{}}}
 function id(prefix=''){return prefix+randomBytes(12).toString('hex')}
 function sha(v){return createHash('sha256').update(String(v)).digest('hex')}
 function now(){return new Date().toISOString()}
@@ -73,7 +75,13 @@ function postView(post,store,viewerId=''){
 }
 function cleanupSessions(store){const t=Date.now();for(const[h,s]of Object.entries(store.sessions||{}))if(s.expiresAt<=t)delete store.sessions[h]}
 async function auth(req,store=null){const token=bearer(req);if(!token)return null;store||=await readStore();cleanupSessions(store);const s=store.sessions[sha(token)],user=s&&s.expiresAt>Date.now()&&store.users[s.userId];return user?{user,token,store}:null}
-function createSession(store,userId){const token=randomBytes(32).toString('base64url');store.sessions[sha(token)]={userId,createdAt:Date.now(),expiresAt:Date.now()+SESSION_MS};return token}
+function createSession(store,userId,{quantic=false}={}){
+  const token=randomBytes(32).toString('base64url');
+  store.sessions[sha(token)]={userId,createdAt:Date.now(),
+    expiresAt:Date.now()+(quantic?QUANTIC_SESSION_MS:SESSION_MS),
+    ...(quantic?{quantic:true}:{})};
+  return token;
+}
 function notify(store,userId,payload){if(!userId||userId===payload.actorId)return;if(!store.notifications[userId])store.notifications[userId]=[];store.notifications[userId].unshift({id:id('n_'),createdAt:now(),read:false,...payload});store.notifications[userId]=store.notifications[userId].slice(0,300)}
 function conversationKey(a,b){return[a,b].sort().join(':')}
 
@@ -86,6 +94,69 @@ export async function handlePulse(req,res,url,corsHeaders={}){
     if(!allowRate(req,'all',180,60000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
 
     if(route==='/api/pulse/health'&&req.method==='GET'){json(res,200,{ok:true,service:'quantic-pulse',storage:usePostgres?'postgres':useMysql?'mysql':'json'},corsHeaders);return true}
+
+    if(route==='/api/pulse/auth/quantic/challenge'&&req.method==='POST'){
+      if(!allowRate(req,'quantic-challenge',30,60000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
+      const challenge=newQuanticChallenge(),expiresAt=Date.now()+QUANTIC_CHALLENGE_MS;
+      await mutateStore(store=>{
+        store.quanticChallenges||={};
+        for(const [k,v] of Object.entries(store.quanticChallenges)){
+          if(v.expiresAt<Date.now())delete store.quanticChallenges[k];
+        }
+        store.quanticChallenges[sha(challenge)]={expiresAt};
+      });
+      json(res,200,{challenge,relyingParty:'quanticminds.onrender.com',
+        algorithm:'Ed25519',expiresInMs:QUANTIC_CHALLENGE_MS},corsHeaders);
+      return true
+    }
+
+    if(route==='/api/pulse/auth/quantic/complete'&&req.method==='POST'){
+      if(!allowRate(req,'quantic-complete',30,60000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
+      const b=await bodyJson(req,8192),challenge=b.challenge;
+      const proof=normalizeQuanticAssertion(b);
+      if(!validQuanticChallenge(challenge)||!proof){json(res,400,{error:'invalid_quantic_proof'},corsHeaders);return true}
+      const out=await mutateStore(store=>{
+        store.quanticChallenges||={};
+        store.quanticKeys||={};
+        const tokenHash=sha(challenge),pending=store.quanticChallenges[tokenHash];
+        if(!pending||pending.expiresAt<=Date.now())return{error:'expired_or_replayed_challenge'};
+        // Every challenge is one-shot even if the signature fails.
+        delete store.quanticChallenges[tokenHash];
+        const enrolled=Object.values(store.quanticKeys).find(item=>item.keyId===proof.keyId);
+        const publicKey=proof.publicKey||enrolled?.publicKey;
+        const fingerprint=identityFingerprint(publicKey);
+        if(!fingerprint)return{error:'quantic_public_key_required'};
+        if(!verifyQuanticProof(challenge,proof.signature,publicKey))return{error:'invalid_quantic_signature'};
+        // No trust in keyId alone: verify that any preexisting keyId refers to
+        // precisely the same Ed25519 public key.
+        if(enrolled&&enrolled.fingerprint!==fingerprint)return{error:'quantic_identity_mismatch'};
+        let mapped=store.quanticKeys[fingerprint];
+        const bearerToken=bearer(req),session=store.sessions[sha(bearerToken)];
+        const signedInUser=session&&session.expiresAt>Date.now()?store.users[session.userId]:null;
+        let userId=mapped?.userId;
+        if(mapped&&signedInUser&&signedInUser.id!==userId)return{error:'quantic_identity_already_bound'};
+        if(!userId&&signedInUser){userId=signedInUser.id}
+        if(!userId){
+          const handle='qid_'+fingerprint.slice(0,16);
+          if(store.handles[handle])return{error:'quantic_handle_collision'};
+          const uid=id('u_'),pw=hashPassword(randomBytes(32).toString('base64url'));
+          store.users[uid]={id:uid,handle,displayName:'Quantic ID',bio:'',avatar:'',
+            verified:false,passwordSalt:pw.salt,passwordHash:pw.hash,createdAt:now(),updatedAt:now()};
+          store.handles[handle]=uid;
+          store.follows[uid]=[];
+          store.blocks[uid]=[];
+          store.bookmarks[uid]=[];
+          userId=uid;
+        }
+        if(!store.users[userId])return{error:'account_missing'};
+        store.quanticKeys[fingerprint]={fingerprint,keyId:proof.keyId,publicKey:{kty:'OKP',crv:'Ed25519',x:publicKey.x},userId};
+        const token=createSession(store,userId,{quantic:true});
+        return{token,user:publicUser(store.users[userId],store,userId),
+          expiresInMs:QUANTIC_SESSION_MS,keyId:proof.keyId};
+      });
+      const code=out.error?(['expired_or_replayed_challenge','quantic_identity_already_bound','quantic_identity_mismatch','quantic_handle_collision'].includes(out.error)?409:400):200;
+      json(res,code,out,corsHeaders);return true
+    }
 
     if(route==='/api/pulse/auth/register'&&req.method==='POST'){
       if(!allowRate(req,'register',8,3600000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
