@@ -125,6 +125,23 @@ async function health(){
   }
 }
 
+// Only the GEKKO native, origin-checked browser bridge injects this event.
+// It carries a backend-issued short-lived token, never an identity private key.
+window.addEventListener('quantic-gekkko-session',event=>{
+  if(location.origin!=='https://xdsawyerlol.github.io'||
+    !/^\\/QuanticSillage\\/zoon(?:\\.html)?$/.test(location.pathname))return;
+  const session=event.detail;
+  if(session?.token && typeof session.token==='string' && session.user?.id){
+    const first=!state.user;
+    applySession(session);
+    closeAuth();
+    if(first)loadHome().catch(()=>{});
+  }else if(session && session.token===''){
+    clearSession();
+    loadHome().catch(()=>{});
+  }
+});
+
 function bindStaticEvents(){
   dom.textarea.addEventListener('input',function(){
     dom.count.textContent=dom.textarea.value.length+' / 420';
