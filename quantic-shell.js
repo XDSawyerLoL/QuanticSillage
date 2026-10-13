@@ -2,7 +2,7 @@
 const SECURE_BRIDGE="http://127.0.0.1:47621";
 const QUANTIC_ID_ACCESS_ENABLED=false;
 const APPS=[
-["Sillage","index.html"],["Pulse","pulse.html"],["Mail","https://quanticmail.onrender.com"],["News","news.html"],["Vision","solutions.html#providence"],["Glide","solutions.html#browser"],["OS","solutions.html#quanticos"]
+["Sillage","index.html"],["SOCIAL","pulse.html"],["Mail","https://quanticmail.onrender.com"],["News","news.html"],["Vision","solutions.html#providence"],["GEKKO","solutions.html#browser"],["OS","solutions.html#quanticos"]
 ];
 function el(tag,attrs={},html=""){const n=document.createElement(tag);Object.entries(attrs).forEach(([k,v])=>{if(k==="class")n.className=v;else if(k.startsWith("data-"))n.setAttribute(k,v);else n[k]=v});if(html)n.innerHTML=html;return n}
 function ensureEnterButtons(){
