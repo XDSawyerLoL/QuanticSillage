@@ -12,7 +12,7 @@ const PULSE_DATABASE_URL=process.env.PULSE_DATABASE_URL||'';
 const MYSQL={host:process.env.PULSE_DB_HOST||'',port:Number(process.env.PULSE_DB_PORT||3306),user:process.env.PULSE_DB_USER||'',password:process.env.PULSE_DB_PASSWORD||'',database:process.env.PULSE_DB_NAME||''};
 const usePostgres=!!PULSE_DATABASE_URL;
 const useMysql=!usePostgres&&!!(MYSQL.host&&MYSQL.user&&MYSQL.database);
-let pgPool=null,mysqlPool=null,writeQueue=Promise.resolve();
+let pgPool=null,pgPoolInitializing=null,mysqlPool=null,writeQueue=Promise.resolve();
 const rate=new Map();
 
 function emptyStore(){return{version:1,users:{},handles:{},sessions:{},posts:{},follows:{},likes:{},reposts:{},bookmarks:{},circles:{},circleMembers:{},notifications:{},reports:{},blocks:{},conversations:{},messages:{},quanticChallenges:{},quanticKeys:{}}}
@@ -31,13 +31,33 @@ function allowRate(req,bucket,max,windowMs){const ip=String(req.headers['x-forwa
 async function pg(){
   if(!usePostgres)return null;
   if(pgPool)return pgPool;
-  const mod=await import('pg');
-  const connectionUrl=new URL(PULSE_DATABASE_URL);
-  if(connectionUrl.searchParams.get('sslmode')==='require')connectionUrl.searchParams.set('sslmode','verify-full');
-  pgPool=new mod.Pool({connectionString:connectionUrl.toString(),max:4});
-  await pgPool.query('CREATE TABLE IF NOT EXISTS quantic_pulse_store (store_key VARCHAR(40) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
-  await pgPool.query('INSERT INTO quantic_pulse_store (store_key,data) VALUES ($1,$2::jsonb) ON CONFLICT (store_key) DO NOTHING',['pulse',JSON.stringify(emptyStore())]);
-  return pgPool;
+  if(pgPoolInitializing)return pgPoolInitializing;
+  // Concurrent SOCIAL requests share a single initialized pool.
+  pgPoolInitializing=(async()=>{
+    const mod=await import('pg');
+    const connectionUrl=new URL(PULSE_DATABASE_URL);
+    if(connectionUrl.searchParams.get('sslmode')==='require')connectionUrl.searchParams.set('sslmode','verify-full');
+    const candidate=new mod.Pool({connectionString:connectionUrl.toString(),max:4});
+    // pg emits 'error' when an IDLE client loses its connection.
+    // Without a listener EventEmitter crashes the entire Node process.
+    // Failed idle clients are removed by pg and replaced automatically.
+    candidate.on('error',error=>{
+      const code=typeof error?.code==='string'?error.code.slice(0,48):'connection_lost';
+      console.warn('[PULSE DB] Idle PostgreSQL connection lost:',code);
+    });
+    try{
+      await candidate.query('CREATE TABLE IF NOT EXISTS quantic_pulse_store (store_key VARCHAR(40) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
+      await candidate.query('INSERT INTO quantic_pulse_store (store_key,data) VALUES ($1,$2::jsonb) ON CONFLICT (store_key) DO NOTHING',['pulse',JSON.stringify(emptyStore())]);
+      pgPool=candidate;
+      return candidate;
+    }catch(error){
+      try{await candidate.end()}catch{}
+      throw error;
+    }
+  })();
+  try{return await pgPoolInitializing}
+  catch(error){pgPool=null;throw error}
+  finally{pgPoolInitializing=null}
 }
 async function pool(){
   if(!useMysql)return null;
