@@ -184,7 +184,7 @@ export async function handlePulse(req,res,url,corsHeaders={}){
     }
 
     if(route==='/api/pulse/auth/register'&&req.method==='POST'){
-      if(!allowRate(req,'register',8,3600000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
+      if(!allowRate(req,'register-ip',60,3600000)||!allowRate(req,'register-handle-'+sha(handle).slice(0,16),8,3600000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
       const b=await bodyJson(req),handle=clean(b.handle,24).toLowerCase().replace(/^@/,''),displayName=clean(b.displayName,50),password=String(b.password||'');
       if(!HANDLE_RE.test(handle)){json(res,400,{error:'invalid_handle'},corsHeaders);return true}
       if(displayName.length<2){json(res,400,{error:'invalid_display_name'},corsHeaders);return true}
@@ -194,7 +194,7 @@ export async function handlePulse(req,res,url,corsHeaders={}){
     }
 
     if(route==='/api/pulse/auth/login'&&req.method==='POST'){
-      if(!allowRate(req,'login',20,900000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
+      if(!allowRate(req,'login-ip',600,900000)||!allowRate(req,'login-handle-'+sha(handle).slice(0,16),20,900000)){json(res,429,{error:'rate_limited'},corsHeaders);return true}
       const b=await bodyJson(req),handle=clean(b.handle,24).toLowerCase().replace(/^@/,''),password=String(b.password||'');
       const out=await mutateStore(store=>{const uid=store.handles[handle],user=uid&&store.users[uid];if(!user||!verifyPassword(password,user))return{error:'invalid_credentials'};const token=createSession(store,uid);return{token,user:publicUser(user,store,uid)}});
       json(res,out.error?401:200,out,corsHeaders);return true
