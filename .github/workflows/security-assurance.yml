@@ -5,6 +5,8 @@ on:
       - 'security/four-pillars-assurance.json'
       - 'scripts/check-security-assurance.mjs'
       - 'tests/security-assurance.test.mjs'
+      - 'tests/security-publication-wiring.test.mjs'
+      - '.github/workflows/deploy-pages.yml'
       - 'docs/SECURITY-ASSURANCE-FOUR-PILLARS-2026.md'
       - '.github/workflows/security-assurance.yml'
   push:
@@ -29,8 +31,9 @@ jobs:
       - name: Validate assurance contract
         run: |
           node --check scripts/check-security-assurance.mjs
-          node --test tests/security-assurance.test.mjs
+          node --test tests/security-assurance.test.mjs tests/security-publication-wiring.test.mjs
           node scripts/check-security-assurance.mjs --check
+          node scripts/check-security-assurance.mjs --assert-public-site
       - name: Assert production approval remains denied while evidence missing
         run: |
           if node scripts/check-security-assurance.mjs --assert-release >/dev/null; then
