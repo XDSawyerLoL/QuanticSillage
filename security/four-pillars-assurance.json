@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "lastReviewed": "2026-11-23",
+  "state": "NOT_CERTIFIED",
+  "domain": "quantic-sillage-security-assurance-v1",
+  "productionPermissions": {
+    "claimAnonymity": false,
+    "migrateRealIdentity": false,
+    "claimPostCompromiseMessaging": false,
+    "enableRealPayments": false
+  },
+  "pillars": [
+    {
+      "id": "scattering",
+      "title": "Anonymat conditionnel du transport",
+      "state": "NOT_PROVEN",
+      "model": "observateur passif puis actif; tailles, cadence, directions, pertes, destinations et retransmissions",
+      "criteria": [
+        "adversary-model-reviewed",
+        "formal-bound-independent-review",
+        "physical-two-host-test",
+        "active-network-attack-test"
+      ],
+      "evidence": [],
+      "attestations": []
+    },
+    {
+      "id": "identity",
+      "title": "Identité et coffre natif post-quantique",
+      "state": "NOT_PROVEN",
+      "model": "compromission web historique, vol du coffre, appareil malveillant et restauration/revocation",
+      "criteria": [
+        "legacy-secret-migration-integrity",
+        "native-nonexportable-key-custody",
+        "postquantum-root-continuity",
+        "recovery-revocation-adversarial",
+        "independent-security-audit"
+      ],
+      "evidence": [],
+      "attestations": []
+    },
+    {
+      "id": "messaging",
+      "title": "Sécurité évolutive de la messagerie",
+      "state": "NOT_PROVEN",
+      "model": "adversaire réseau actif, vol temporaire d'état de session, attaques quantiques futures",
+      "criteria": [
+        "standard-ratchet-design-review",
+        "formal-forward-and-postcompromise-analysis",
+        "rekey-and-compromise-e2e-test",
+        "multi-device-loss-recovery-test",
+        "independent-security-audit"
+      ],
+      "evidence": [],
+      "attestations": []
+    },
+    {
+      "id": "payments",
+      "title": "Paiement privé et interopérable",
+      "state": "NOT_PROVEN",
+      "model": "rejeu, double dépense hors ligne, partition réseau, fraude, divulgation excessive",
+      "criteria": [
+        "offline-double-spend-risk-model",
+        "durable-quorum-and-reconciliation",
+        "privacy-selective-disclosure-proof",
+        "eudi-or-psp-interop-tests",
+        "regulated-approval-and-audit"
+      ],
+      "evidence": [],
+      "attestations": []
+    }
+  ]
+}

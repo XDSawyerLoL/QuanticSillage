@@ -1,0 +1,43 @@
+name: Quantic four-pillar assurance checks
+on:
+  pull_request:
+    paths:
+      - 'security/four-pillars-assurance.json'
+      - 'scripts/check-security-assurance.mjs'
+      - 'tests/security-assurance.test.mjs'
+      - 'tests/security-publication-wiring.test.mjs'
+      - '.github/workflows/deploy-pages.yml'
+      - 'docs/SECURITY-ASSURANCE-FOUR-PILLARS-2026.md'
+      - '.github/workflows/security-assurance.yml'
+  push:
+    branches: ['main', 'security/**']
+    paths:
+      - 'security/four-pillars-assurance.json'
+      - 'scripts/check-security-assurance.mjs'
+      - 'tests/security-assurance.test.mjs'
+      - 'docs/SECURITY-ASSURANCE-FOUR-PILLARS-2026.md'
+      - '.github/workflows/security-assurance.yml'
+
+permissions:
+  contents: read
+jobs:
+  assurance-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate assurance contract
+        run: |
+          node --check scripts/check-security-assurance.mjs
+          node --test tests/security-assurance.test.mjs tests/security-publication-wiring.test.mjs
+          node scripts/check-security-assurance.mjs --check
+          node scripts/check-security-assurance.mjs --assert-public-site
+      - name: Assert production approval remains denied while evidence missing
+        run: |
+          if node scripts/check-security-assurance.mjs --assert-release >/dev/null; then
+            echo "UNEXPECTED release authorization without proof — refusing"
+            exit 1
+          fi
+          echo "PASS: unreviewed production claims are blocked"
