@@ -3,7 +3,7 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { evaluateAssurance, signedStatement } from '../scripts/check-security-assurance.mjs';
+import { evaluateAssurance, signedStatement, publicationBoundary } from '../scripts/check-security-assurance.mjs';
 
 const manifest = JSON.parse(readFileSync(fileURLToPath(
   new URL('../security/four-pillars-assurance.json', import.meta.url)), 'utf8'));
@@ -86,4 +86,24 @@ test('invalid schema, duplicate criteria, missing pillar or extraneous fields ar
   const dup = copy();
   dup.pillars[0].criteria.push(dup.pillars[0].criteria[0]);
   assert.throws(() => evaluateAssurance(dup), /Invalid criteria/);
+});
+
+test('informational publishing stays allowed only while security claims stay disabled', () => {
+  const doc = copy();
+  assert.equal(publicationBoundary(doc, evaluateAssurance(doc), 'informational'), true);
+  assert.equal(publicationBoundary(doc, evaluateAssurance(doc), 'sensitive'), false);
+  doc.productionPermissions.enableRealPayments = true;
+  assert.equal(publicationBoundary(doc, evaluateAssurance(doc), 'informational'), false);
+  doc.productionPermissions.enableRealPayments = false;
+  doc.state = 'CERTIFIED';
+  assert.equal(publicationBoundary(doc, evaluateAssurance(doc), 'informational'), false);
+});
+test('a fully signed synthetic approval is handled separately from informational boundary', () => {
+  const doc = fakeReviewed();
+  const keys = auditors();
+  signAs(doc, keys);
+  const roots = Object.fromEntries(keys.map(k => [k.id,k.pem]));
+  assert.equal(publicationBoundary(doc, evaluateAssurance(doc, roots), 'sensitive'), true);
+  assert.equal(publicationBoundary(doc, evaluateAssurance(doc, roots), 'informational'), true);
+  assert.throws(() => publicationBoundary(doc, evaluateAssurance(doc), 'something-else'), /Unknown/);
 });
