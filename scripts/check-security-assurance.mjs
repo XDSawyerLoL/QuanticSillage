@@ -121,9 +121,22 @@ export function evaluateAssurance(document, roots = {}) {
     warning: 'Signed evidence is a review gate, not proof of cryptographic security. Enforce this check in a protected deployment pipeline.',
   };
 }
+/**
+ * Publishing informational pages must not implicitly activate unproven sensitive
+ * functionality. Production claims need the independently attested release mode.
+ */
+export function publicationBoundary(document, result, channel) {
+  if (channel === 'informational') {
+    const noClaims = document.state === 'NOT_CERTIFIED' &&
+      Object.values(document.productionPermissions).every(value => value === false);
+    return noClaims || result.ready;
+  }
+  if (channel === 'sensitive') return result.ready;
+  throw new Error('Unknown publication channel');
+}
 function cli() {
   const args = process.argv.slice(2);
-  if (args.some(a => !['--check', '--assert-release'].includes(a))) {
+  if (args.some(a => !['--check', '--assert-release', '--assert-public-site'].includes(a))) {
     throw new Error('Usage: node scripts/check-security-assurance.mjs [--check|--assert-release]');
   }
   const target = resolve(fileURLToPath(new URL('../security/four-pillars-assurance.json', import.meta.url)));
@@ -133,7 +146,8 @@ function cli() {
   const roots = JSON.parse(process.env.QUANTIC_ASSURANCE_AUDITOR_KEYS || '{}');
   const result = evaluateAssurance(document, roots);
   console.log(JSON.stringify(result, null, 2));
-  if (args.includes('--assert-release') && !result.ready) process.exitCode = 2;
+  if (args.includes('--assert-release') && !publicationBoundary(document, result, 'sensitive')) process.exitCode = 2;
+  if (args.includes('--assert-public-site') && !publicationBoundary(document, result, 'informational')) process.exitCode = 2;
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try { cli(); } catch (e) { console.error('Assurance gate refused: ' + e.message); process.exitCode = 2; }
