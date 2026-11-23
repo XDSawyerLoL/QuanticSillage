@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Refuse unsupported Quantic security claims on public Pages
+        run: node scripts/check-security-assurance.mjs --assert-public-site
       - run: npm install
       - run: npm run build
       - uses: actions/configure-pages@v5
